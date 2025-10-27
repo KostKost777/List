@@ -198,30 +198,134 @@ enum ReturnStatus DeleteElement(struct StructList* list, size_t del_index)
     return success;
 }
 
-void ListDump(struct StructList* list)
+void ListDump(struct StructList list)
 {
-    assert(list != NULL);
 
-    printf("\nDATA: \n");
-    for (size_t i = 0; i < list->capacity; ++i) {
-        printf("%d ", list->data[i]);
+    static int file_counter = 0;
+
+    char* image_file_name = NULL;
+
+    SetNewImageFileName(file_counter, &image_file_name);
+
+    printf("|||FILE NAME: %s|||\n", image_file_name);
+
+    FILE* graphiz_file = fopen(image_file_name, "w");
+
+    fprintf(graphiz_file, "digraph {\n"
+                          "rankdir = HR;\n");
+
+    const char* color = NULL;
+
+    fprintf(graphiz_file, "node%u "
+                              "[shape = rectangle; "
+                              "style = filled; "
+                              "fillcolor = \"#ECF96A\"; "
+                              "color = \"#80000\"; "
+                              "label = \"HEAD\"; ]\n",
+                                         list.capacity);
+
+    fprintf(graphiz_file, "node%u "
+                              "[shape = rectangle; "
+                              "style = filled; "
+                              "fillcolor = \"#ECF96A\"; "
+                              "color = \"#80000\"; "
+                              "label = \"TAIL\"; ]\n",
+                                         list.capacity + 1);
+
+    fprintf(graphiz_file, "node%u "
+                              "[shape = rectangle; "
+                              "style = filled; "
+                              "fillcolor = \"#ECF96A\"; "
+                              "color = \"#80000\"; "
+                              "label = \"FREE\"; ]\n",
+                                         list.capacity + 2);
+
+    const int ORIGINAL_FREE = list.free;
+
+    for (size_t i = 0; i < list.capacity; i++) {
+
+        if (i == list.free){
+            color = "#F14065";
+            list.free = list.next[list.free];
+        }
+        else
+            color = "#77DD77";
+
+        fprintf(graphiz_file, "node%u "
+                              "[shape = rectangle; "
+                              "style = filled; "
+                              "fillcolor = \"%s\"; "
+                              "color = \"#80000\"; "
+                              "label = \"INDEX = %u \\n"
+                                         "DATA = %d  \\n"
+                                         "NEXT = %d "
+                                         "PREV = %d"
+                                         "\"; ]\n",
+                                         i, color, i,
+                                         list.data[i],
+                                         list.next[i],
+                                         list.prev[i]);
     }
 
-    printf("\nNEXT: \n");
-    for (size_t i = 0; i < list->capacity; ++i) {
-        printf("%d ", list->next[i]);
+    fprintf(graphiz_file, "{ rank = same; ");
+
+    for (size_t i = 1; i < list.capacity; ++i) {
+        fprintf(graphiz_file, "node%u; ", i);
     }
 
-    printf("\nPREV: \n");
-    for (size_t i = 0; i < list->capacity; ++i) {
-        printf("%d ", list->prev[i]);
+    fprintf(graphiz_file, "}\n");
+
+    fprintf(graphiz_file, "{ rank = same; node%u; node%u; node%u}\n", list.capacity,
+                                                                    list.capacity + 1,
+                                                                    list.capacity + 2);
+    fprintf(graphiz_file, "node0 -> node1 "
+                          "[color = \"transparent\"]\n");
+
+    for (size_t i = list.head; i != list.tail; i = list.next[i]) {
+        fprintf(graphiz_file, "node%u -> node%d "
+                              "[color = \"red\"]\n", i, list.next[i]);
     }
 
-    printf("\nHEAD: %u", list->head);
+    fprintf(graphiz_file, "node%u -> node0 "
+                          "[color = \"blue\"]\n", list.tail);
 
-    printf("\nTAIL: %u", list->tail);
+    for (size_t i = list.tail; i != list.head; i = list.prev[i]) {
+        fprintf(graphiz_file, "node%u -> node%d "
+                              "[color = \"blue\"]\n", i, list.prev[i]);
+    }
 
-    printf("\nFREE: %u\n", list->free);
+    fprintf(graphiz_file, "node%u -> node%u "
+                          "[color = \"yellow\"]\n", list.capacity, list.head);
+
+    fprintf(graphiz_file, "node%u -> node%u "
+                          "[color = \"yellow\"]\n", list.capacity + 1, list.tail);
+
+    fprintf(graphiz_file, "node%u -> node%u "
+                          "[color = \"yellow\"]\n", list.capacity + 2, ORIGINAL_FREE);
+
+    fprintf(graphiz_file, "}");
+
+
+    fclose(graphiz_file);
+    free(image_file_name);
+    file_counter++;
+}
+
+void SetNewImageFileName(int file_counter, char** new_file_name)
+{
+
+    char graphiz_file_name[100] = "image";
+    const char* file_extension = ".txt";
+
+    char str_file_counter[10] = "";
+
+    snprintf(str_file_counter, sizeof(str_file_counter),
+             "%d", file_counter);
+
+    strncat(graphiz_file_name, str_file_counter,  sizeof(str_file_counter));
+    strncat(graphiz_file_name, file_extension,  10);
+
+    *new_file_name = strdup(graphiz_file_name);
 }
 
 

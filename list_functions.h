@@ -22,13 +22,15 @@ enum ReturnStatus ListCtor (struct StructList* list);
 
 void ListDtor(struct StructList* list);
 
+void SetNewImageFileName(int file_counter, char** new_file_name);
+
 // enum ReturnStatus ListVerifier(struct StructList* list);
 
 void SetDefaultNext(struct StructList* list);
 
 void SetDefaultPrev(struct StructList* list);
 
-void ListDump(struct StructList* list);
+void ListDump(struct StructList list);
 
 enum ReturnStatus InsertAfter(struct StructList* list,
                               size_t prev_index, int value);
