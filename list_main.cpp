@@ -6,6 +6,9 @@
 
 int main()
 {
+    FILE* log_file = fopen(log_file_name, "w");
+    fclose(log_file);
+
     struct StructList list = {};
 
     list.capacity = 10;

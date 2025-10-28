@@ -24,7 +24,9 @@ enum ReturnStatus ListCtor (struct StructList* list);
 
 void ListDtor(struct StructList* list);
 
-void SetNewImageFileName(int file_counter, char** new_file_name);
+char* GetNewImageFileName(int file_counter);
+
+char* GetNewDotCmd(int file_counter);
 
 // enum ReturnStatus ListVerifier(struct StructList* list);
 

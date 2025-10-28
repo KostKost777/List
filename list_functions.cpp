@@ -205,9 +205,7 @@ void ListDump(struct StructList list)
 
     static int file_counter = 0;
 
-    char* image_file_name = NULL;
-
-    SetNewImageFileName(file_counter, &image_file_name);
+    char* image_file_name = GetNewImageFileName(file_counter);
 
     FILE* graphiz_file = fopen(image_file_name, "w");
 
@@ -216,8 +214,6 @@ void ListDump(struct StructList list)
     fprintf(graphiz_file, "digraph {\n"
                           "rankdir = HR;\n"
                           "splines = ortho\n");
-
-    const char* color = NULL;
 
     fprintf(graphiz_file, "head "
                           "[shape = rectangle; "
@@ -239,6 +235,8 @@ void ListDump(struct StructList list)
                           "fillcolor = \"#ECF96A\"; "
                           "color = \"#80000\"; "
                           "label = \"FREE\"; ]\n");
+
+    const char* color = NULL;
 
     for (size_t i = 0; i < list.capacity; i++) {
 
@@ -278,40 +276,44 @@ void ListDump(struct StructList list)
 
     for (size_t i = 0; i < list.capacity - 1; i++) {
         fprintf(graphiz_file, "node%u -> node%u "
-                              "[color = \"transparent\"; weight=100]\n", i, i + 1);
+                              "[color = \"transparent\";"
+                              " weight=100]\n", i, i + 1);
     }
 
     for (size_t i = list.head; i != list.tail; i = list.next[i]) {
         fprintf(graphiz_file, "node%u -> node%d "
-                              "[color = \"red\", weight=0]\n", i, list.next[i]);
+                              "[color = \"red\","
+                              " weight=0]\n", i, list.next[i]);
     }
 
     fprintf(graphiz_file, "node%u -> node0 "
-                          "[color = \"blue\", weight=0]\n", list.tail);
+                          "[color = \"blue\","
+                          " weight=0]\n", list.tail);
 
     for (size_t i = list.tail; i != list.head; i = list.prev[i]) {
         fprintf(graphiz_file, "node%u -> node%d "
-                              "[color = \"blue\", weight=0]\n", i, list.prev[i]);
+                              "[color = \"blue\","
+                              " weight=0]\n", i, list.prev[i]);
     }
 
     fprintf(graphiz_file, "head -> node%u "
-                          "[color = \"yellow\", weight=100]\n", list.head);
+                          "[color = \"yellow\","
+                          " weight=100]\n", list.head);
 
     fprintf(graphiz_file, "tail -> node%u "
-                          "[color = \"yellow\", weight=100]\n", list.tail);
+                          "[color = \"yellow\","
+                          " weight=100]\n", list.tail);
 
     fprintf(graphiz_file, "free -> node%u "
-                          "[color = \"yellow\", weight=100]\n", ORIGINAL_FREE);
+                          "[color = \"yellow\","
+                          " weight=100]\n", ORIGINAL_FREE);
 
     fprintf(graphiz_file, "}");
-
-    char command[100] = "";
-    snprintf(command, sizeof(command), "dot -Tpng image%d.txt -o image%d.png",
-                                        file_counter, file_counter);
 
     fclose(graphiz_file);
     free(image_file_name);
 
+    char* command = GetNewDotCmd(file_counter);
     printf("%s\n", command);
     system(command);
 
@@ -321,23 +323,25 @@ void ListDump(struct StructList list)
     file_counter++;
 }
 
-
-void SetNewImageFileName(int file_counter, char** new_file_name)
+char* GetNewDotCmd(int file_counter)
 {
-    assert(new_file_name != NULL);
+    char str_command[100] = "";
 
-    char graphiz_file_name[100] = "image";
-    const char* file_extension = ".txt";
+    snprintf(str_command, sizeof(str_command),
+            "dot -Tpng image%d.txt -o image%d.png",
+             file_counter, file_counter);
 
-    char str_file_counter[10] = "";
+    return strdup(str_command);
+}
+
+char* GetNewImageFileName(int file_counter)
+{
+    char str_file_counter[100] = "";
 
     snprintf(str_file_counter, sizeof(str_file_counter),
-             "%d", file_counter);
+             "image%d.txt", file_counter);
 
-    strncat(graphiz_file_name, str_file_counter,  sizeof(str_file_counter));
-    strncat(graphiz_file_name, file_extension,  10);
-
-    *new_file_name = strdup(graphiz_file_name);
+    return strdup(str_file_counter);
 }
 
 void FillLogFile(char* image_file_name, struct StructList list, int file_counter)
@@ -348,10 +352,10 @@ void FillLogFile(char* image_file_name, struct StructList list, int file_counter
 
     fprintf(log_file, "<pre>\n");
     fprintf(log_file, "<h3> DUMP </h3>\n");
-    fprintf(log_file, "      ");
+    fprintf(log_file, "INDX: ");
 
     for (size_t i = 0; i < list.capacity; ++i) {
-        fprintf(log_file, "%5d ", i);
+        fprintf(log_file, "%5u ", i);
     }
 
     fprintf(log_file, "\nDATA: ");
@@ -372,9 +376,7 @@ void FillLogFile(char* image_file_name, struct StructList list, int file_counter
         fprintf(log_file, "%5d ", list.prev[i]);
     }
 
-    fprintf(log_file, "\nIMAGE:\n");
-
-    fprintf(log_file, "<img src=image%d.png width=1000px>\n\n", file_counter);
+    fprintf(log_file, "\n<img src=image%d.png width=1500px>\n\n", file_counter);
 
     fclose(log_file);
 }
