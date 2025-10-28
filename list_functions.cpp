@@ -73,12 +73,18 @@ enum ReturnStatus InsertAfter(struct StructList* list,
 {
     assert(list != NULL);
 
+    FILE* log_file = fopen(log_file_name, "a");
+    fprintf(log_file, "До вставки после [%u] элемента %d\n", prev_index, value);
+    fclose(log_file);
+
+    ListDump(*list);
+
+
+
     if (list->tail == list->capacity - 1) {
         printf("List is full");
         return error;
     }
-
-    printf("\nпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ %u\n", prev_index);
 
     // вставка первого элемента
     if (prev_index == 0 && list->tail == 1) {
@@ -144,12 +150,24 @@ enum ReturnStatus InsertAfter(struct StructList* list,
 
     }
 
+    log_file = fopen(log_file_name, "a");
+    fprintf(log_file, "После вставки после [%u] элемента %d\n", prev_index, value);
+    fclose(log_file);
+
+    ListDump(*list);
+
     return success;
 }
 
 enum ReturnStatus DeleteElement(struct StructList* list, size_t del_index)
 {
     assert(list != NULL);
+
+    FILE* log_file = fopen(log_file_name, "a");
+    fprintf(log_file, "До удаление [%u]", del_index);
+    fclose(log_file);
+
+    ListDump(*list);
 
     //список пуст
     if (list->tail == 1) {
@@ -166,15 +184,15 @@ enum ReturnStatus DeleteElement(struct StructList* list, size_t del_index)
 
         list->next[list->prev[del_index]] = 0;
         list->next[del_index] = list->free;
+
         list->free = del_index;
 
         list->prev[del_index] = -1;
-
-        return success;
     }
 
     //удаление первого элемента
-    if (del_index == list->head) {
+    else if (del_index == list->head) {
+
        list->data[del_index] = 0;
 
        list->head = list->next[del_index];
@@ -184,18 +202,26 @@ enum ReturnStatus DeleteElement(struct StructList* list, size_t del_index)
 
        list->prev[del_index] = -1;
 
-       return success;
     }
 
-    list->data[del_index] = 0;
-    list->next[list->prev[del_index]] = list->next[del_index];
+    //удаление из середины
+    else {
+        list->data[del_index] = 0;
+        list->next[list->prev[del_index]] = list->next[del_index];
 
-    list->prev[list->next[del_index]] = list->prev[del_index];
+        list->prev[list->next[del_index]] = list->prev[del_index];
 
-    list->prev[del_index] = -1;
+        list->prev[del_index] = -1;
 
-    list->next[del_index] = list->free;
-    list->free = del_index;
+        list->next[del_index] = list->free;
+        list->free = del_index;
+    }
+
+    log_file = fopen(log_file_name, "a");
+    fprintf(log_file, "После удаление [%u]", del_index);
+    fclose(log_file);
+
+    ListDump(*list);
 
     return success;
 }
@@ -240,10 +266,21 @@ void ListDump(struct StructList list)
 
     for (size_t i = 0; i < list.capacity; i++) {
 
-        if (i == list.free){
+        bool is_free_index = false;
+
+        for (size_t index_free_el = list.free;
+                    index_free_el != 0;
+                    index_free_el = list.next[index_free_el]) {
+
+                 if (i == index_free_el) {
+                    is_free_index = true;
+                    break;
+                }
+        }
+
+        if (is_free_index){
 
             color = "#F14065";
-            list.free = list.next[list.free];
         }
         else
             color = "#77DD77";
@@ -313,9 +350,11 @@ void ListDump(struct StructList list)
     fclose(graphiz_file);
     free(image_file_name);
 
+
     char* command = GetNewDotCmd(file_counter);
-    printf("%s\n", command);
+    //printf("%s\n", command);
     system(command);
+    free(command);
 
     list.free = ORIGINAL_FREE;
     FillLogFile(image_file_name, list, file_counter);
@@ -352,33 +391,47 @@ void FillLogFile(char* image_file_name, struct StructList list, int file_counter
 
     fprintf(log_file, "<pre>\n");
     fprintf(log_file, "<h3> DUMP </h3>\n");
+
+    fprintf(log_file, "HEAD: %u\n", list.head);
+    fprintf(log_file, "TAIL: %u\n", list.tail);
+    fprintf(log_file, "FREE: %u\n\n", list.free);
+
     fprintf(log_file, "INDX: ");
 
     for (size_t i = 0; i < list.capacity; ++i) {
-        fprintf(log_file, "%5u ", i);
+        fprintf(log_file, "|%3u| ", i);
     }
 
     fprintf(log_file, "\nDATA: ");
 
     for (size_t i = 0; i < list.capacity; ++i) {
-        fprintf(log_file, "%5d ", list.data[i]);
+        fprintf(log_file, "|%3d| ", list.data[i]);
     }
 
     fprintf(log_file, "\nNEXT: ");
 
     for (size_t i = 0; i < list.capacity; ++i) {
-        fprintf(log_file, "%5d ", list.next[i]);
+        fprintf(log_file, "|%3d| ", list.next[i]);
     }
 
     fprintf(log_file, "\nPREV: ");
 
     for (size_t i = 0; i < list.capacity; ++i) {
-        fprintf(log_file, "%5d ", list.prev[i]);
+        fprintf(log_file, "|%3d| ", list.prev[i]);
     }
 
-    fprintf(log_file, "\n<img src=image%d.png width=1500px>\n\n", file_counter);
+    fprintf(log_file, "\n<img src=image%d.png width=2000px>\n\n", file_counter);
+
+    fprintf(log_file, "-------------------------------------------------\n\n");
 
     fclose(log_file);
+}
+
+void UserPrintList(struct StructList list)
+{
+    for (int i = list.head; i != 0; i = list.next[i]) {
+        printf("%d ", list.data[i]);
+    }
 }
 
 

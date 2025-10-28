@@ -11,12 +11,10 @@ int main()
 
     struct StructList list = {};
 
-    list.capacity = 10;
+    list.capacity = 13;
 
     if (ListCtor(&list))
         goto exit;
-
-    ListDump(list);
 
     InsertAfter(&list, 0, 10);
 
@@ -30,15 +28,23 @@ int main()
 
     InsertAfter(&list, 5, 60);
 
-    InsertAfter(&list, 3, 35);
+    InsertAfter(&list, 0, 9);
 
-    ListDump(list);
+    InsertAfter(&list, 0, 8);
 
+    InsertAfter(&list, 1, 11);
 
+    InsertAfter(&list, 0, 7);
 
-    for (int i = list.head; i != 0; i = list.next[i]) {
-        printf("%d ", list.data[i]);
-    }
+    InsertAfter(&list, 0, 6);
+
+    DeleteElement(&list, 6);
+
+    DeleteElement(&list, 11);
+
+    DeleteElement(&list, 3);
+
+    UserPrintList(list);
 
     exit:
         ListDtor(&list);

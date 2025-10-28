@@ -28,6 +28,8 @@ char* GetNewImageFileName(int file_counter);
 
 char* GetNewDotCmd(int file_counter);
 
+void UserPrintList(struct StructList list);
+
 // enum ReturnStatus ListVerifier(struct StructList* list);
 
 void SetDefaultNext(struct StructList* list);
@@ -44,5 +46,7 @@ enum ReturnStatus InsertAfter(struct StructList* list,
 enum ReturnStatus DeleteElement(struct StructList* list,
                                 size_t del_index);
 
+#define INSERT_AFTER(list, index)  \
+    InsertAfter(list, index, __LINE__, __func__, __FILE__); \
 
 #endif
