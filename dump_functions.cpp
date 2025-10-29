@@ -11,15 +11,14 @@ enum ReturnStatus ListVerifier(struct StructList* list)
     if (list->tail == list->head)
         return success;
 
-    if (list->head >= list->capacity || list->prev[list->head] != 0) {
-
-        list->err_code |= list_head_err;
+    if (list->capacity == 0 || list->capacity > MAX_CAPACITY) {
+        list->err_code |= list_capacity_err;
         return error;
     }
 
-    if (list->capacity == 0 || list->capacity > MAX_CAPACITY) {
+    if (list->head >= list->capacity || list->prev[list->head] != 0) {
 
-        list->err_code |= list_capacity_err;
+        list->err_code |= list_head_err;
         return error;
     }
 
@@ -101,38 +100,47 @@ void PrintError(struct StructList* list)
     assert(list != NULL);
 
     if (list->err_code & list_loop_err)
-        fprintf(log_file, "BAD_LIST_LOOP - [%d]\n", list_loop_err);
+        fprintf(log_file, "<h2>BAD_LIST_LOOP - [%d]</h2>\n", list_loop_err);
 
     if (list->err_code & list_capacity_err)
-        fprintf(log_file, "BAD_CAPACITY - [%d]\n", list_capacity_err);
+        fprintf(log_file, "<h2>BAD_CAPACITY - [%d]</h2>\n", list_capacity_err);
 
     if (list->err_code & list_head_err)
-        fprintf(log_file, "BAD_HEAD - [%d]\n", list_head_err);
+        fprintf(log_file, "<h2>BAD_HEAD - [%d]</h2>\n", list_head_err);
 
     if (list->err_code & list_tail_err)
-        fprintf(log_file, "BAD_TAIL - [%d]\n", list_tail_err);
+        fprintf(log_file, "<h2>BAD_TAIL - [%d]</h2>\n", list_tail_err);
 
     if (list->err_code & list_free_err)
-        fprintf(log_file, "BAD_FREE - [%d]\n", list_free_err);
+        fprintf(log_file, "<h2>BAD_FREE - [%d]</h2>\n", list_free_err);
 
     if (list->err_code & list_size_err)
-        fprintf(log_file, "BAD_SIZE - [%d]\n", list_size_err);
+        fprintf(log_file, "<h2>BAD_SIZE - [%d]</h2>\n", list_size_err);
 
     if (list->err_code & list_PZN_err)
-        fprintf(log_file, "BAD_PZN - [%d]\n", list_PZN_err);
+        fprintf(log_file, "<h2>BAD_PZN - [%d]</h2>\n", list_PZN_err);
 
     if (list->err_code & list_next_err)
-        fprintf(log_file, "BAD_NEXT - [%d]\n", list_next_err);
+        fprintf(log_file, "<h2>BAD_NEXT - [%d]</h2>\n", list_next_err);
 
     if (list->err_code & list_prev_err)
-        fprintf(log_file, "BAD_PREV - [%d]\n", list_loop_err);
+        fprintf(log_file, "<h2>BAD_PREV - [%d]</h2>\n", list_loop_err);
 
 }
 
-void ListDump(struct StructList* list)
+enum ReturnStatus ListDump(struct StructList* list,
+                           const int line, const char* func, const char* file)
 {
-    if (list->err_code != 0)
+    assert(list != NULL);
+    assert(func != NULL);
+    assert(file != NULL);
+
+    if (list->err_code != 0) {
         PrintError(list);
+        return fatal_error;
+    }
+
+    fprintf(log_file, "<h4>LIST { %s %s:%d }</h4>\n", file, func, line);
 
     static int file_counter = 0;
 
@@ -271,6 +279,8 @@ void ListDump(struct StructList* list)
     FillLogFile(image_file_name, list, file_counter);
 
     file_counter++;
+
+    return success;
 }
 
 char* GetNewDotCmd(int file_counter)
@@ -297,6 +307,7 @@ char* GetNewImageFileName(int file_counter)
 void FillLogFile(char* image_file_name, struct StructList* list, int file_counter)
 {
     assert(image_file_name != NULL);
+    assert(list != NULL);
 
     fprintf(log_file, "HEAD: %u\n", list->head);
     fprintf(log_file, "TAIL: %u\n", list->tail);
@@ -326,9 +337,9 @@ void FillLogFile(char* image_file_name, struct StructList* list, int file_counte
         fprintf(log_file, "|%3d| ", list->prev[i]);
     }
 
-    fprintf(log_file, "\n<img src=image%d.png width=2000px>\n\n", file_counter);
+    fprintf(log_file, "\n\n<img src=image%d.png width=2000px>\n\n", file_counter);
 
-    fprintf(log_file, "-------------------------------------------------\n\n");
+    fprintf(log_file, "-------------------------------------------------------\n");
 
     fflush(log_file);
 }

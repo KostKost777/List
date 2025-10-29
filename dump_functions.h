@@ -14,7 +14,8 @@ enum ErrorCodes
     list_prev_err =        256,
 };
 
-void ListDump(struct StructList* list);
+enum ReturnStatus ListDump(struct StructList* list,
+                           const int LINE, const char* FUNC, const char* FILE);
 
 void PrintError(struct StructList* list);
 
@@ -28,7 +29,7 @@ char* GetNewDotCmd(int file_counter);
 
 #define LIST_VERIFAIER(list)                            \
     if (ListVerifier(list) == error) {                  \
-        ListDump(list);                                \
+        ListDump(list, line, func, file);                \
         printf("Îøèáêà %d\n", list->err_code);            \
         return error;                                   \
     }                                                   \
@@ -36,7 +37,19 @@ char* GetNewDotCmd(int file_counter);
 #define PRINT_DUMP_LOG(list, message, index)                    \
     fprintf(log_file, message, index);                           \
     fflush(log_file);                                           \
-    ListDump(list);                                            \
+    ListDump(list, line, func, file);                            \
+
+#define INSERT_AFTER(list, index, element)                        \
+    if (InsertAfter(list, index, element,                          \
+                    __LINE__, __func__, __FILE__) == error) {      \
+        goto exit;                                                \
+    }
+
+#define DELETE_ELEMENT(list, index)                        \
+    if (DeleteElement(list, index,                          \
+                    __LINE__, __func__, __FILE__) == error) {      \
+        goto exit;                                                \
+    }
 
 
 #endif

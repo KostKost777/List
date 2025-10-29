@@ -83,18 +83,20 @@ void SetDefaultPrev(struct StructList* list)
 }
 
 enum ReturnStatus InsertAfter(struct StructList* list,
-                              size_t prev_index, int value)
+                              size_t prev_index, int value,
+                              const int line, const char* func, const char* file)
 {
     assert(list != NULL);
 
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertAfter [%u]</h3>\n", prev_index);
+    LIST_VERIFAIER(list);
+
+    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertAfter [%u]</h3>\n", prev_index);;
+
 
     if (list->tail == list->capacity - 1) {
         printf("List is full");
         return error;
     }
-
-    LIST_VERIFAIER(list);
 
     // вставка первого элемента
     if (prev_index == 0 && list->tail == 1) {
@@ -167,13 +169,15 @@ enum ReturnStatus InsertAfter(struct StructList* list,
     return success;
 }
 
-enum ReturnStatus DeleteElement(struct StructList* list, size_t del_index)
+enum ReturnStatus DeleteElement(struct StructList* list,
+                                size_t del_index,
+                                const int line, const char* func, const char* file)
 {
     assert(list != NULL);
 
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before Delete [%u]</h3>\n", del_index);
-
     LIST_VERIFAIER(list);
+
+    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before Delete [%u]</h3>\n", del_index);
 
     //список пуст
     if (list->tail == 1) {

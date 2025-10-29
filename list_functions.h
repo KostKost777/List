@@ -8,7 +8,8 @@ const size_t MAX_CAPACITY = 1E6;
 enum ReturnStatus
 {
     success = 0,
-    error = 1
+    error = 1,
+    fatal_error = 2,
 };
 
 struct StructList
@@ -40,10 +41,12 @@ void SetDefaultPrev(struct StructList* list);
 void SetDefaultData(struct StructList* list);
 
 enum ReturnStatus InsertAfter(struct StructList* list,
-                              size_t prev_index, int value);
+                              size_t prev_index, int value,
+                              const int LINE, const char* FUNC, const char* FILE);
 
 enum ReturnStatus DeleteElement(struct StructList* list,
-                                size_t del_index);
+                                size_t del_index,
+                                const int LINE, const char* FUNC, const char* FILE);
 
 void CloseLogFile();
 

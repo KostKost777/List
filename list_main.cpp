@@ -17,33 +17,35 @@ int main()
     if (ListCtor(&list))
         goto exit;
 
-    InsertAfter(&list, 0, 10);
+    INSERT_AFTER(&list, 0, 10);
 
-    InsertAfter(&list, 1, 20);
+    INSERT_AFTER(&list, 1, 20);
 
-    InsertAfter(&list, 2, 30);
+    INSERT_AFTER(&list, 2, 30);
 
-    InsertAfter(&list, 3, 40);
+    INSERT_AFTER(&list, 3, 40);
 
-    InsertAfter(&list, 4, 50);
+    INSERT_AFTER(&list, 4, 50);
 
-    InsertAfter(&list, 5, 60);
+    INSERT_AFTER(&list, 5, 60);
 
-    InsertAfter(&list, 0, 9);
+    list.capacity = 0;
 
-    InsertAfter(&list, 0, 8);
+    INSERT_AFTER(&list, 0, 9);
 
-    InsertAfter(&list, 1, 11);
+    INSERT_AFTER(&list, 0, 8);
 
-    InsertAfter(&list, 0, 7);
+    INSERT_AFTER(&list, 1, 11);
 
-    InsertAfter(&list, 0, 6);
+    INSERT_AFTER(&list, 0, 7);
 
-    DeleteElement(&list, 6);
+    INSERT_AFTER(&list, 0, 6);
 
-    DeleteElement(&list, 11);
+    DELETE_ELEMENT(&list, 6);
 
-    DeleteElement(&list, 3);
+    DELETE_ELEMENT(&list, 11);
+
+    DELETE_ELEMENT(&list, 3);
 
     UserPrintList(&list);
 
