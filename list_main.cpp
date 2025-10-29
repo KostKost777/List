@@ -2,12 +2,13 @@
 #include <errno.h>
 
 #include "list_functions.h"
+#include "dump_functions.h"
 
 
 int main()
 {
-    FILE* log_file = fopen(log_file_name, "w");
-    fclose(log_file);
+    atexit(CloseLogFile);
+    fprintf(log_file, "<pre>\n");
 
     struct StructList list = {};
 
@@ -48,6 +49,7 @@ int main()
 
     exit:
         ListDtor(&list);
+        printf("END\n");
 
         if(!errno)
             return 0;

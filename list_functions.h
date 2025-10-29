@@ -1,6 +1,10 @@
 #ifndef LIST_FUNC
 #define LIST_FUNC
 
+const int PZN = 228;
+
+const size_t MAX_CAPACITY = 1E6;
+
 enum ReturnStatus
 {
     success = 0,
@@ -16,29 +20,24 @@ struct StructList
     size_t tail;
     size_t free;
     size_t capacity;
+    int err_code;
 };
 
 extern const char* log_file_name;
+
+extern FILE* log_file;
 
 enum ReturnStatus ListCtor (struct StructList* list);
 
 void ListDtor(struct StructList* list);
 
-char* GetNewImageFileName(int file_counter);
-
-char* GetNewDotCmd(int file_counter);
-
 void UserPrintList(struct StructList list);
-
-// enum ReturnStatus ListVerifier(struct StructList* list);
 
 void SetDefaultNext(struct StructList* list);
 
 void SetDefaultPrev(struct StructList* list);
 
-void ListDump(struct StructList list);
-
-void FillLogFile(char* image_file_name, struct StructList list, int file_counter);
+void SetDefaultData(struct StructList* list);
 
 enum ReturnStatus InsertAfter(struct StructList* list,
                               size_t prev_index, int value);
@@ -46,7 +45,6 @@ enum ReturnStatus InsertAfter(struct StructList* list,
 enum ReturnStatus DeleteElement(struct StructList* list,
                                 size_t del_index);
 
-#define INSERT_AFTER(list, index)  \
-    InsertAfter(list, index, __LINE__, __func__, __FILE__); \
+void CloseLogFile();
 
 #endif
