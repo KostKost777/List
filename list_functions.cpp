@@ -160,6 +160,8 @@ enum ReturnStatus InsertAfter(struct StructList* list,
 
     }
 
+    LIST_VERIFAIER(list);
+
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertAfter [%u]</h3>\n", prev_index);
 
     return success;
@@ -171,7 +173,7 @@ enum ReturnStatus DeleteElement(struct StructList* list, size_t del_index)
 
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before Delete [%u]</h3>\n", del_index);
 
-    //LIST_VERIFAIER(list);
+    LIST_VERIFAIER(list);
 
     //список пуст
     if (list->tail == 1) {
@@ -200,6 +202,7 @@ enum ReturnStatus DeleteElement(struct StructList* list, size_t del_index)
        list->data[del_index] = PZN;
 
        list->head = list->next[del_index];
+       list->prev[list->head] = 0;
 
        list->next[del_index] = list->free;
        list->free = del_index;
@@ -223,15 +226,17 @@ enum ReturnStatus DeleteElement(struct StructList* list, size_t del_index)
         list->free = del_index;
     }
 
+    LIST_VERIFAIER(list);
+
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After Delete [%u]</h3>\n", del_index);
 
     return success;
 }
 
-void UserPrintList(struct StructList list)
+void UserPrintList(struct StructList* list)
 {
-    for (int i = list.head; i != 0; i = list.next[i]) {
-        printf("%d ", list.data[i]);
+    for (int i = list->head; i != 0; i = list->next[i]) {
+        printf("%d ", list->data[i]);
     }
     printf("\n");
 }

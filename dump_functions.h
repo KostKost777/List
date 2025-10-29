@@ -1,7 +1,6 @@
 #ifndef DUMP_FUNC
 #define DUMP_FUNC
 
-
 enum ErrorCodes
 {
     list_loop_err =        1,
@@ -15,9 +14,11 @@ enum ErrorCodes
     list_prev_err =        256,
 };
 
-void ListDump(struct StructList list);
+void ListDump(struct StructList* list);
 
-void FillLogFile(char* image_file_name, struct StructList list, int file_counter);
+void PrintError(struct StructList* list);
+
+void FillLogFile(char* image_file_name, struct StructList* list, int file_counter);
 
 enum ReturnStatus ListVerifier(struct StructList* list);
 
@@ -27,7 +28,7 @@ char* GetNewDotCmd(int file_counter);
 
 #define LIST_VERIFAIER(list)                            \
     if (ListVerifier(list) == error) {                  \
-        ListDump(*list);                                \
+        ListDump(list);                                \
         printf("Îøèáêà %d\n", list->err_code);            \
         return error;                                   \
     }                                                   \
@@ -35,7 +36,7 @@ char* GetNewDotCmd(int file_counter);
 #define PRINT_DUMP_LOG(list, message, index)                    \
     fprintf(log_file, message, index);                           \
     fflush(log_file);                                           \
-    ListDump(*list);                                            \
+    ListDump(list);                                            \
 
 
 #endif

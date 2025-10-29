@@ -45,7 +45,7 @@ int main()
 
     DeleteElement(&list, 3);
 
-    UserPrintList(list);
+    UserPrintList(&list);
 
     exit:
         ListDtor(&list);

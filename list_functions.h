@@ -31,7 +31,7 @@ enum ReturnStatus ListCtor (struct StructList* list);
 
 void ListDtor(struct StructList* list);
 
-void UserPrintList(struct StructList list);
+void UserPrintList(struct StructList* list);
 
 void SetDefaultNext(struct StructList* list);
 
