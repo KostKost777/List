@@ -12,11 +12,11 @@ enum ErrorCodes
     list_head_err =        4,
     list_tail_err =        8,
     list_free_err =        16,
-    list_size_err =        32,
+    list_num_of_el_err =   32,
     list_PZN_err =         64,
     list_next_err =        128,
     list_prev_err =        256,
-    list_canary_err =      512
+    list_canary_err =      512,
 };
 
 enum ReturnStatus ListDump(struct StructList* list,
@@ -28,15 +28,11 @@ void FillLogFile(char* image_file_name, struct StructList* list, int file_counte
 
 enum ReturnStatus ListVerifier(struct StructList* list);
 
-char* GetNewImageFileName(int file_counter);
-
-char* GetNewDotCmd(int file_counter);
-
 void PrintDumpLog(struct StructList* list,
                    const int line, const char* func, const char* file,
                    const char* message, ...);
 
-#define LIST_VERIFAIER(list)                            \
+#define LIST_VERIFIER(list)                            \
     if (ListVerifier(list) == error) {                  \
         printf("Îøèáêà %d\n", list->err_code);            \
         ListDump(list, line, func, file);                \

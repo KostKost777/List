@@ -6,6 +6,27 @@
 const char* log_file_name = "";
 FILE* log_file = NULL;
 
+static char* GetNewDotCmd(int file_counter)
+{
+    char str_command[100] = "";
+
+    snprintf(str_command, sizeof(str_command),
+            "dot -Tpng image%d.txt -o image%d.png",
+             file_counter, file_counter);
+
+    return strdup(str_command);
+}
+
+static char* GetNewImageFileName(int file_counter)
+{
+    char str_file_counter[100] = "";
+
+    snprintf(str_file_counter, sizeof(str_file_counter),
+             "image%d.txt", file_counter);
+
+    return strdup(str_file_counter);
+}
+
 enum ReturnStatus ListVerifier(struct StructList* list)
 {
     assert(list != NULL);
@@ -36,17 +57,10 @@ enum ReturnStatus ListVerifier(struct StructList* list)
         return error;
     }
 
-    if (list->free == 0) {
-
-        list->err_code |= list_size_err;
-        return error;
-    }
-
     //printf("DATA_FREE: %d\n", list->data[list->free]);
 
-    if (   list->free >= list->capacity
-        || list->data[list->free] != PZN
-        || list->prev[list->free] != -1) {
+    if (list->free != 0 && (list->free >= list->capacity
+        || (list->data[list->free] != PZN || list->prev[list->free] != -1))) {
 
         list->err_code |= list_free_err;
         return error;
@@ -99,7 +113,28 @@ enum ReturnStatus ListVerifier(struct StructList* list)
             return error;
 
         }
+    }
 
+    int count_el = 0;
+
+    for (int i = list->next[0]; i != 0; i = list->next[i])
+        count_el++;
+
+    //printf("COUNTER: %d\n", count_el);
+
+    if (list->num_of_el != count_el) {
+        list->err_code |= list_num_of_el_err;
+        return error;
+    }
+
+    count_el = 0;
+
+    for (int i = list->prev[0]; i != 0; i = list->prev[i])
+        count_el++;
+
+    if (list->num_of_el != count_el) {
+        list->err_code |= list_num_of_el_err;
+        return error;
     }
 
     return success;
@@ -124,9 +159,6 @@ void PrintError(struct StructList* list)
     if (list->err_code & list_free_err)
         fprintf(log_file, "<h2>BAD_FREE - [%d]</h2>\n", list_free_err);
 
-    if (list->err_code & list_size_err)
-        fprintf(log_file, "<h2>BAD_SIZE - [%d]</h2>\n", list_size_err);
-
     if (list->err_code & list_PZN_err)
         fprintf(log_file, "<h2>BAD_PZN - [%d]</h2>\n", list_PZN_err);
 
@@ -135,6 +167,13 @@ void PrintError(struct StructList* list)
 
     if (list->err_code & list_prev_err)
         fprintf(log_file, "<h2>BAD_PREV - [%d]</h2>\n", list_loop_err);
+
+    if (list->err_code & list_canary_err)
+        fprintf(log_file, "<h2>BAD_CANARY - [%d]</h2>\n", list_canary_err);
+
+    if (list->err_code & list_num_of_el_err)
+        fprintf(log_file, "<h2>BAD_NUM_OF_ELEMENT - [%d]</h2>\n", list_num_of_el_err);
+
 
 }
 
@@ -147,10 +186,10 @@ enum ReturnStatus ListDump(struct StructList* list,
 
     if (list->err_code != 0) {
         PrintError(list);
-        return fatal_error;
+        //return fatal_error;
     }
 
-    fprintf(log_file, "<h4>LIST { %s %s:%d }</h4>\n", file, func, line);
+    fprintf(log_file, "<h4>LIST { %s %s:%d }</h4>\n", func, file, line);
 
     static int file_counter = 0;
 
@@ -315,27 +354,6 @@ enum ReturnStatus ListDump(struct StructList* list,
     file_counter++;
 
     return success;
-}
-
-char* GetNewDotCmd(int file_counter)
-{
-    char str_command[100] = "";
-
-    snprintf(str_command, sizeof(str_command),
-            "dot -Tpng image%d.txt -o image%d.png",
-             file_counter, file_counter);
-
-    return strdup(str_command);
-}
-
-char* GetNewImageFileName(int file_counter)
-{
-    char str_file_counter[100] = "";
-
-    snprintf(str_file_counter, sizeof(str_file_counter),
-             "image%d.txt", file_counter);
-
-    return strdup(str_file_counter);
 }
 
 void FillLogFile(char* image_file_name, struct StructList* list, int file_counter)

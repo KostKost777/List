@@ -1,12 +1,48 @@
 #include <TXLib.h>
-#include <errno.h>
 
 #include "list_functions.h"
 #include "dump_functions.h"
 
-ReturnStatus ListCtor(struct StructList* list)
+static void SetDefaultNext(struct StructList* list)
 {
     assert(list != NULL);
+
+    list->next[0] = 0;
+
+    for (int i = 1; i < list->capacity; ++i)
+        list->next[i] = i + 1;
+
+    list->next[list->capacity - 1] = 0;
+
+}
+
+static void SetDefaultData(struct StructList* list)
+{
+    assert(list != NULL);
+
+    list->data[0] = CANARY;
+
+    for (int i = 1; i < list->capacity; ++i)
+        list->data[i] = PZN;
+
+}
+
+static void SetDefaultPrev(struct StructList* list)
+{
+    assert(list != NULL);
+
+    list->prev[0] = 0;
+
+    for (int i = 1; i < list->capacity; ++i)
+        list->prev[i] = -1;
+
+}
+
+ReturnStatus ListCtor(struct StructList* list, int capacity)
+{
+    assert(list != NULL);
+
+    list->capacity = capacity;
 
     list->data = (int*)calloc(list->capacity, sizeof(int));
 
@@ -16,7 +52,6 @@ ReturnStatus ListCtor(struct StructList* list)
 
     if (list->data == NULL || list->next == NULL || list->prev == NULL) {
         printf("Memory was not allocated");
-        errno = error;
         return error;
     }
 
@@ -44,50 +79,15 @@ void ListDtor(struct StructList* list)
     list->prev = NULL;
 }
 
-void SetDefaultNext(struct StructList* list)
-{
-    assert(list != NULL);
-
-    list->next[0] = 0;
-
-    for (int i = 1; i < list->capacity; ++i)
-        list->next[i] = i + 1;
-
-    list->next[list->capacity - 1] = 0;
-
-}
-
-void SetDefaultData(struct StructList* list)
-{
-    assert(list != NULL);
-
-    list->data[0] = CANARY;
-
-    for (int i = 1; i < list->capacity; ++i)
-        list->data[i] = PZN;
-
-}
-
-void SetDefaultPrev(struct StructList* list)
-{
-    assert(list != NULL);
-
-    list->prev[0] = 0;
-
-    for (int i = 1; i < list->capacity; ++i)
-        list->prev[i] = -1;
-
-}
-
-enum ReturnStatus InsertAfter(struct StructList* list,
-                              int index, int value,
-                              const int line, const char* func, const char* file)
+int InsertAfter(struct StructList* list,
+                int index, int value,
+                const int line, const char* func, const char* file)
 {
     assert(list != NULL);
     assert(func != NULL);
     assert(file != NULL);
 
-    LIST_VERIFAIER(list);
+    LIST_VERIFIER(list);
 
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertAfter(%d, %d)</h3>\n",
                                                            index, value);
@@ -101,37 +101,45 @@ enum ReturnStatus InsertAfter(struct StructList* list,
         return error;
     }
 
+    if (list->num_of_el >= list->capacity - 1) {
+
+        fprintf(log_file, "<h2>Not enough capacity</h2>\n");
+        return error;
+    }
+
     list->data[list->free] = value;
 
-    int next_free = list->next[list->free];
+    int old_free = list->free;
 
-    list->next[list->free] = list->next[index];
+    list->free = list->next[list->free];
 
-    list->prev[list->next[index]] = list->free;
+    list->next[old_free] = list->next[index];
 
-    list->next[index] = list->free;
+    list->prev[list->next[index]] = old_free;
 
-    list->prev[list->free] = index;
+    list->next[index] = old_free;
 
-    list->free = next_free;
+    list->prev[old_free] = index;
 
-    LIST_VERIFAIER(list);
+    list->num_of_el++;
+
+    LIST_VERIFIER(list);
 
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertAfter(%d, %d)</h3>\n",
                                                            index, value);
 
-    return success;
+    return old_free;
 }
 
-enum ReturnStatus InsertBefore(struct StructList* list,
-                              int index, int value,
-                              const int line, const char* func, const char* file)
+int InsertBefore(struct StructList* list,
+                 int index, int value,
+                 const int line, const char* func, const char* file)
 {
     assert(list != NULL);
     assert(func != NULL);
     assert(file != NULL);
 
-    LIST_VERIFAIER(list);
+    LIST_VERIFIER(list);
 
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertBefore(%d, %d)</h3>\n",
                                                             index, value);
@@ -145,26 +153,33 @@ enum ReturnStatus InsertBefore(struct StructList* list,
         return error;
     }
 
+    if (list->num_of_el >= list->capacity - 1) {
+
+        fprintf(log_file, "<h2>Not enough capacity</h2>\n");
+        return error;
+    }
+
     list->data[list->free] = value;
 
-    int next_free = list->next[list->free];
+    int old_free = list->free;
 
-    list->next[list->prev[index]] = list->free;
+    list->free = list->next[list->free];
 
-    list->next[list->free] = index;
+    list->next[list->prev[index]] = old_free;
 
-    list->prev[list->free] = list->prev[index];
+    list->next[old_free] = index;
 
-    list->prev[index] = list->free;
+    list->prev[old_free] = list->prev[index];
 
-    list->free = next_free;
+    list->prev[index] = old_free;
 
-    LIST_VERIFAIER(list);
+    list->num_of_el++;
+
+    LIST_VERIFIER(list);
 
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertBefore(%d, %d)</h3>\n",
                                                            index, value);
-
-    return success;
+    return old_free;
 }
 
 enum ReturnStatus DeleteElement(struct StructList* list,
@@ -175,7 +190,7 @@ enum ReturnStatus DeleteElement(struct StructList* list,
     assert(func != NULL);
     assert(file != NULL);
 
-    LIST_VERIFAIER(list);
+    LIST_VERIFIER(list);
 
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before Delete(%d)</h3>\n", del_index);
 
@@ -200,7 +215,9 @@ enum ReturnStatus DeleteElement(struct StructList* list,
 
     list->free = del_index;
 
-    LIST_VERIFAIER(list);
+    list->num_of_el--;
+
+    LIST_VERIFIER(list);
 
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After Delete(%d)</h3>\n", del_index);
 

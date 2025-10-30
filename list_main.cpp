@@ -6,38 +6,45 @@
 
 int main()
 {
+    int out_index = 0;
+
     struct StructList list = {};
 
     atexit(CloseLogFile);
 
     if (OpenLogFile())
-        goto exit;
+        goto exit_label;
 
-    list.capacity = 5;
+    if (ListCtor(&list, 10))
+        goto exit_label;
 
-    if (ListCtor(&list))
-        goto exit;
+    INSERT_AFTER(&list, 0, 10, exit_label);
 
-    INSERT_AFTER(&list, 0, 10);
+    INSERT_AFTER(&list, 1, 20, exit_label);
 
-    INSERT_AFTER(&list, 1, 20);
+    INSERT_AFTER(&list, 2, 30, exit_label);
 
-    INSERT_AFTER(&list, 2, 30);
+    INSERT_AFTER(&list, 3, 40, exit_label);
 
-    INSERT_AFTER(&list, 3, 40);
+    INSERT_AFTER(&list, 4, 50, exit_label);
+
+    INSERT_BEFORE(&list, 3, 25, exit_label);
+
+    INSERT_BEFORE(&list, 1, 5, exit_label);
+
+    DELETE_ELEMENT(&list, 6, exit_label);
 
     UserPrintList(&list);
 
-    exit:
+    exit_label:
 
         ListDtor(&list);
 
-        if(!errno) {
+        if (out_index != -1) {
             printf("END SUCCESS\n");
             return 0;
         }
 
         printf("END WITH ERROR\n");
         return 1;
-
 }
