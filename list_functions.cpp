@@ -24,6 +24,7 @@ ReturnStatus ListCtor(struct StructList* list)
     SetDefaultPrev(list);
     SetDefaultData(list);
 
+    list->num_of_el = 0;
     list->free = 1;
     list->err_code = 0;
 

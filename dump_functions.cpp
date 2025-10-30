@@ -14,7 +14,7 @@ enum ReturnStatus ListVerifier(struct StructList* list)
     if (list->prev[0] == list->next[0] && list->next[0] == 0)
         return success;
 
-    if (list->data[0] !=CANARY) {
+    if (list->data[0] != CANARY) {
         list->err_code |= list_canary_err;
         return error;
     }
@@ -167,23 +167,23 @@ enum ReturnStatus ListDump(struct StructList* list,
                           "nodesep = 0.5\n");
 
     fprintf(graphiz_file, "head "
-                          "[shape = rectangle; "
+                          "[shape = Mrecord; "
                           "style = filled; "
-                          "fillcolor = \"orange\"; "
+                          "fillcolor = \"#F2B138\"; "
                           "color = \"#80000\"; "
                           "label = \"HEAD\"; ]\n");
 
     fprintf(graphiz_file, "tail "
-                          "[shape = rectangle; "
+                          "[shape = Mrecord; "
                           "style = filled; "
-                          "fillcolor = \"orange\"; "
+                          "fillcolor = \"#5F85BB\"; "
                           "color = \"#80000\"; "
                           "label = \"TAIL\"; ]\n");
 
     fprintf(graphiz_file, "free "
-                          "[shape = rectangle; "
+                          "[shape = Mrecord; "
                           "style = filled; "
-                          "fillcolor = \"orange\"; "
+                          "fillcolor = \"#F14065\"; "
                           "color = \"#80000\"; "
                           "label = \"FREE\"; ]\n");
 
@@ -203,29 +203,41 @@ enum ReturnStatus ListDump(struct StructList* list,
                 }
         }
 
-        if (is_free_index)
+        if (i == 0)
+            color = "#F984E5";
+
+        else if (is_free_index)
 
             color = "#F14065";
 
+        else if(i == list->next[0])
+
+            color = "#F2B138";
+
+        else if (i == list->prev[0])
+
+            color = "#5F85BB";
+
         else
+
             color = "#77DD77";
 
         fprintf(graphiz_file, "node%d "
-                              "[shape = rectangle; "
+                              "[shape = Mrecord; "
                               "style = filled; "
                               "fillcolor = \"%s\"; "
-                              "color = \"#80000\"; "
-                              "label = \"INDEX = %d \\n",
+                              "color = \"#00000\"; "
+                              "label = \"{INDEX = %d |",
                                i, color, i);
 
         if (list->data[i] == PZN)
-            fprintf(graphiz_file, "DATA = PZN \\n");
+            fprintf(graphiz_file, "DATA = PZN |");
 
         else
-            fprintf(graphiz_file, "DATA = %d \\n", list->data[i]);
+            fprintf(graphiz_file, "DATA = %d |", list->data[i]);
 
-        fprintf(graphiz_file, "NEXT = %d "
-                              "PREV = %d"
+        fprintf(graphiz_file, "{NEXT = %d |"
+                              "PREV = %d  }}"
                               "\"; ]\n",
                               list->next[i],
                               list->prev[i]);
@@ -265,24 +277,24 @@ enum ReturnStatus ListDump(struct StructList* list,
                               " weight=0]\n", i, list->next[i]);*/
 
     fprintf(graphiz_file, "node%d -> node0 "
-                          "[color = \"blue\","
+                          "[color = \"#CD00CD\","
                           " weight=0]\n", list->prev[0]);
 
     fprintf(graphiz_file, "node0 -> node%d "
-                          "[color = \"red\","
+                          "[color = \"#CD00CD\","
                           " weight=0]\n", list->next[0]);
 
 
     fprintf(graphiz_file, "head -> node%d "
-                          "[color = \"orange\","
+                          "[color = \"#F2B138\","
                           " weight=10]\n", list->next[0]);
 
     fprintf(graphiz_file, "tail -> node%d "
-                          "[color = \"orange\","
+                          "[color = \"#5F85BB\","
                           " weight=10]\n", list->prev[0]);
 
     fprintf(graphiz_file, "free -> node%d "
-                          "[color = \"orange\","
+                          "[color = \"#F14065\","
                           " weight=10]\n", ORIGINAL_FREE);
 
     fprintf(graphiz_file, "}");

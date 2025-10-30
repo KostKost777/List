@@ -21,6 +21,7 @@ struct StructList
     int* prev;
     int free;
     int capacity;
+    size_t num_of_el;
     int err_code;
 };
 

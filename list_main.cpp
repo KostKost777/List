@@ -13,7 +13,7 @@ int main()
     if (OpenLogFile())
         goto exit;
 
-    list.capacity = 13;
+    list.capacity = 5;
 
     if (ListCtor(&list))
         goto exit;
@@ -25,16 +25,6 @@ int main()
     INSERT_AFTER(&list, 2, 30);
 
     INSERT_AFTER(&list, 3, 40);
-
-    INSERT_AFTER(&list, 4, 50);
-
-    INSERT_AFTER(&list, 5, 60);
-
-    INSERT_BEFORE(&list, 3, 21);
-
-    INSERT_BEFORE(&list, 0, 100);
-
-    DELETE_ELEMENT(&list, 3);
 
     UserPrintList(&list);
 
