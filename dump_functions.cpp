@@ -3,15 +3,23 @@
 #include "list_functions.h"
 #include "dump_functions.h"
 
+const char* log_file_name = "";
+FILE* log_file = NULL;
+
 enum ReturnStatus ListVerifier(struct StructList* list)
 {
     assert(list != NULL);
 
     //список пуст
-    if (list->prev[0] == list->next[0])
+    if (list->prev[0] == list->next[0] && list->next[0] == 0)
         return success;
 
-    if (list->capacity == 0 || list->capacity > MAX_CAPACITY) {
+    if (list->data[0] !=CANARY) {
+        list->err_code |= list_canary_err;
+        return error;
+    }
+
+    if (list->capacity <= 0 || list->capacity > MAX_CAPACITY) {
         list->err_code |= list_capacity_err;
         return error;
     }
@@ -33,6 +41,8 @@ enum ReturnStatus ListVerifier(struct StructList* list)
         list->err_code |= list_size_err;
         return error;
     }
+
+    //printf("DATA_FREE: %d\n", list->data[list->free]);
 
     if (   list->free >= list->capacity
         || list->data[list->free] != PZN
@@ -152,26 +162,28 @@ enum ReturnStatus ListDump(struct StructList* list,
 
     fprintf(graphiz_file, "digraph {\n"
                           "rankdir = HR;\n"
-                          "splines = ortho\n");
+                          "splines = ortho\n"
+                          "ranksep = 1.0\n"
+                          "nodesep = 0.5\n");
 
     fprintf(graphiz_file, "head "
                           "[shape = rectangle; "
                           "style = filled; "
-                          "fillcolor = \"#ECF96A\"; "
+                          "fillcolor = \"orange\"; "
                           "color = \"#80000\"; "
                           "label = \"HEAD\"; ]\n");
 
     fprintf(graphiz_file, "tail "
                           "[shape = rectangle; "
                           "style = filled; "
-                          "fillcolor = \"#ECF96A\"; "
+                          "fillcolor = \"orange\"; "
                           "color = \"#80000\"; "
                           "label = \"TAIL\"; ]\n");
 
     fprintf(graphiz_file, "free "
                           "[shape = rectangle; "
                           "style = filled; "
-                          "fillcolor = \"#ECF96A\"; "
+                          "fillcolor = \"orange\"; "
                           "color = \"#80000\"; "
                           "label = \"FREE\"; ]\n");
 
@@ -233,36 +245,45 @@ enum ReturnStatus ListDump(struct StructList* list,
     for (int i = 0; i < list->capacity - 1; i++) {
         fprintf(graphiz_file, "node%d -> node%d "
                               "[color = \"transparent\";"
-                              " weight=100]\n", i, i + 1);
+                              " weight=10]\n", i, i + 1);
     }
 
     for (int i = list->next[0]; i != list->prev[0]; i = list->next[i]) {
-        fprintf(graphiz_file, "node%d -> node%d "
-                              "[color = \"red\","
-                              " weight=0]\n", i, list->next[i]);
+
+        if (i == list->prev[list->next[i]])
+            fprintf(graphiz_file, "node%d -> node%d "
+                          "[color = \"black\", "
+                          "dir = both, "
+                          " weight=0]\n", i, list->next[i]);
+
     }
+
+    /*for (int i = list->free; i != 0; i = list->next[i])
+
+        fprintf(graphiz_file, "node%d -> node%d "
+                              "[color = \"#F14065\", "
+                              " weight=0]\n", i, list->next[i]);*/
 
     fprintf(graphiz_file, "node%d -> node0 "
                           "[color = \"blue\","
                           " weight=0]\n", list->prev[0]);
 
-    for (int i = list->prev[0]; i != list->next[0]; i = list->prev[i]) {
-        fprintf(graphiz_file, "node%d -> node%d "
-                              "[color = \"blue\","
-                              " weight=0]\n", i, list->prev[i]);
-    }
+    fprintf(graphiz_file, "node0 -> node%d "
+                          "[color = \"red\","
+                          " weight=0]\n", list->next[0]);
+
 
     fprintf(graphiz_file, "head -> node%d "
-                          "[color = \"yellow\","
-                          " weight=100]\n", list->next[0]);
+                          "[color = \"orange\","
+                          " weight=10]\n", list->next[0]);
 
     fprintf(graphiz_file, "tail -> node%d "
-                          "[color = \"yellow\","
-                          " weight=100]\n", list->prev[0]);
+                          "[color = \"orange\","
+                          " weight=10]\n", list->prev[0]);
 
     fprintf(graphiz_file, "free -> node%d "
-                          "[color = \"yellow\","
-                          " weight=100]\n", ORIGINAL_FREE);
+                          "[color = \"orange\","
+                          " weight=10]\n", ORIGINAL_FREE);
 
     fprintf(graphiz_file, "}");
 
@@ -276,6 +297,7 @@ enum ReturnStatus ListDump(struct StructList* list,
     free(command);
 
     list->free = ORIGINAL_FREE;
+
     FillLogFile(image_file_name, list, file_counter);
 
     file_counter++;
@@ -337,9 +359,30 @@ void FillLogFile(char* image_file_name, struct StructList* list, int file_counte
         fprintf(log_file, "|%3d| ", list->prev[i]);
     }
 
-    fprintf(log_file, "\n\n<img src=image%d.png width=2000px>\n\n", file_counter);
+    fprintf(log_file, "\n\n<img src=image%d.png width=%dpx>\n\n", file_counter,
+                                                                list->capacity * 200);
 
     fprintf(log_file, "-------------------------------------------------------\n");
 
     fflush(log_file);
+}
+
+void PrintDumpLog(struct StructList* list,
+                   const int line, const char* func, const char* file,
+                   const char* message, ...)
+{
+    assert(list != NULL);
+    assert(func != NULL);
+    assert(file != NULL);
+    assert(message != NULL);
+
+    va_list args;
+    va_start(args, message);
+
+    vfprintf(log_file, message, args);
+    fflush(log_file);
+
+    va_end(args);
+
+    ListDump(list, line, func, file);
 }

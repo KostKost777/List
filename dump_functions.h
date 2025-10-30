@@ -1,6 +1,10 @@
 #ifndef DUMP_FUNC
 #define DUMP_FUNC
 
+extern const char* log_file_name;
+
+extern FILE* log_file;
+
 enum ErrorCodes
 {
     list_loop_err =        1,
@@ -12,6 +16,7 @@ enum ErrorCodes
     list_PZN_err =         64,
     list_next_err =        128,
     list_prev_err =        256,
+    list_canary_err =      512
 };
 
 enum ReturnStatus ListDump(struct StructList* list,
@@ -27,29 +32,18 @@ char* GetNewImageFileName(int file_counter);
 
 char* GetNewDotCmd(int file_counter);
 
+void PrintDumpLog(struct StructList* list,
+                   const int line, const char* func, const char* file,
+                   const char* message, ...);
+
 #define LIST_VERIFAIER(list)                            \
     if (ListVerifier(list) == error) {                  \
-        ListDump(list, line, func, file);                \
         printf("Îøèáêà %d\n", list->err_code);            \
+        ListDump(list, line, func, file);                \
         return error;                                   \
-    }                                                   \
+    }                                                \
 
-#define PRINT_DUMP_LOG(list, message, index)                    \
-    fprintf(log_file, message, index);                           \
-    fflush(log_file);                                           \
-    ListDump(list, line, func, file);                            \
-
-#define INSERT_AFTER(list, index, element)                        \
-    if (InsertAfter(list, index, element,                          \
-                    __LINE__, __func__, __FILE__) == error) {      \
-        goto exit;                                                \
-    }
-
-#define DELETE_ELEMENT(list, index)                        \
-    if (DeleteElement(list, index,                          \
-                    __LINE__, __func__, __FILE__) == error) {      \
-        goto exit;                                                \
-    }
-
+#define PRINT_DUMP_LOG(list, message, ...)                    \
+        PrintDumpLog(list, line, func, file, message, ##__VA_ARGS__);     \
 
 #endif

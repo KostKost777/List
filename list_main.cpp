@@ -4,13 +4,14 @@
 #include "list_functions.h"
 #include "dump_functions.h"
 
-
 int main()
 {
-    atexit(CloseLogFile);
-    fprintf(log_file, "<pre>\n");
-
     struct StructList list = {};
+
+    atexit(CloseLogFile);
+
+    if (OpenLogFile())
+        goto exit;
 
     list.capacity = 13;
 
@@ -29,19 +30,9 @@ int main()
 
     INSERT_AFTER(&list, 5, 60);
 
-    INSERT_AFTER(&list, 0, 9);
+    INSERT_BEFORE(&list, 3, 21);
 
-    INSERT_AFTER(&list, 0, 8);
-
-    INSERT_AFTER(&list, 1, 11);
-
-    INSERT_AFTER(&list, 0, 7);
-
-    INSERT_AFTER(&list, 0, 6);
-
-    DELETE_ELEMENT(&list, 6);
-
-    DELETE_ELEMENT(&list, 11);
+    INSERT_BEFORE(&list, 0, 100);
 
     DELETE_ELEMENT(&list, 3);
 
