@@ -29,8 +29,6 @@ int main()
 
     INSERT_AFTER(&list, 5, 60);
 
-    list.capacity = 0;
-
     INSERT_AFTER(&list, 0, 9);
 
     INSERT_AFTER(&list, 0, 8);
@@ -50,12 +48,15 @@ int main()
     UserPrintList(&list);
 
     exit:
+
         ListDtor(&list);
-        printf("END\n");
 
-        if(!errno)
+        if(!errno) {
+            printf("END SUCCESS\n");
             return 0;
+        }
 
+        printf("END WITH ERROR\n");
         return 1;
 
 }

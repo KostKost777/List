@@ -3,7 +3,9 @@
 
 const int PZN = 228;
 
-const size_t MAX_CAPACITY = 1E6;
+const int MAX_CAPACITY = 1E6;
+
+const int CANARY = 999;
 
 enum ReturnStatus
 {
@@ -17,10 +19,8 @@ struct StructList
     int* data;
     int* next;
     int* prev;
-    size_t head;
-    size_t tail;
-    size_t free;
-    size_t capacity;
+    int free;
+    int capacity;
     int err_code;
 };
 
@@ -41,11 +41,11 @@ void SetDefaultPrev(struct StructList* list);
 void SetDefaultData(struct StructList* list);
 
 enum ReturnStatus InsertAfter(struct StructList* list,
-                              size_t prev_index, int value,
+                              int prev_index, int value,
                               const int LINE, const char* FUNC, const char* FILE);
 
 enum ReturnStatus DeleteElement(struct StructList* list,
-                                size_t del_index,
+                                int del_index,
                                 const int LINE, const char* FUNC, const char* FILE);
 
 void CloseLogFile();

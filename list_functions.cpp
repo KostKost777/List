@@ -28,8 +28,6 @@ ReturnStatus ListCtor(struct StructList* list)
     SetDefaultPrev(list);
     SetDefaultData(list);
 
-    list->head = 1;
-    list->tail = 1;
     list->free = 1;
     list->err_code = 0;
 
@@ -55,7 +53,7 @@ void SetDefaultNext(struct StructList* list)
 
     list->next[0] = 0;
 
-    for (size_t i = 1; i < list->capacity; ++i)
+    for (int i = 1; i < list->capacity; ++i)
         list->next[i] = i + 1;
 
     list->next[list->capacity - 1] = 0;
@@ -66,7 +64,9 @@ void SetDefaultData(struct StructList* list)
 {
     assert(list != NULL);
 
-    for (size_t i = 1; i < list->capacity; ++i)
+    list->data[0] = CANARY;
+
+    for (int i = 1; i < list->capacity; ++i)
         list->data[i] = PZN;
 
 }
@@ -77,169 +77,74 @@ void SetDefaultPrev(struct StructList* list)
 
     list->prev[0] = 0;
 
-    for (size_t i = 1; i < list->capacity; ++i)
+    for (int i = 1; i < list->capacity; ++i)
         list->prev[i] = -1;
 
 }
 
 enum ReturnStatus InsertAfter(struct StructList* list,
-                              size_t prev_index, int value,
+                              int prev_index, int value,
                               const int line, const char* func, const char* file)
 {
     assert(list != NULL);
 
     LIST_VERIFAIER(list);
 
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertAfter [%u]</h3>\n", prev_index);;
+    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertAfter [%d]</h3>\n", prev_index);
 
+    list->data[list->free] = value;
 
-    if (list->tail == list->capacity - 1) {
-        printf("List is full");
-        return error;
-    }
+    int twin_free = list->free;
 
-    // вставка первого элемента
-    if (prev_index == 0 && list->tail == 1) {
+    list->free = list->next[list->free];
 
-        list->data[list->free] = value;
-        list->prev[list->free] = 0;
+    list->next[twin_free] = list->next[prev_index];
 
-        list->free++;
-    }
+    list->prev[list->next[prev_index]] = twin_free;
 
-    // вставка нового первого элемента
+    list->next[prev_index] = twin_free;
 
-    else if (prev_index == 0) {
-
-        list->data[list->free] = value;
-
-        list->prev[list->free] = list->prev[list->head];
-        list->prev[list->head] = list->free;
-
-        int twin_head = list->head;
-        int twin_free = list->free;
-
-        list->head = list->free;
-        list->free = list->next[list->free];
-        list->next[twin_free] = twin_head;
-
-    }
-
-    //вставка в конец
-    else if (list->tail == prev_index) {
-
-        list->tail++;
-
-        list->data[list->free] = value;
-
-        list->next[prev_index] = list->free;
-
-        list->prev[list->free] = prev_index;
-
-        list->free = list->next[list->free];
-
-        list->next[list->tail] = 0;
-
-    }
-
-    //вставка между элементами
-
-    else {
-
-        list->data[list->free] = value;
-
-        int twin_free = list->free;
-
-        list->free = list->next[list->free];
-
-        list->next[twin_free] = list->next[prev_index];
-
-        list->prev[list->next[prev_index]] = twin_free;
-
-        list->next[prev_index] = twin_free;
-
-        list->prev[twin_free] = prev_index;
-
-    }
+    list->prev[twin_free] = prev_index;
 
     LIST_VERIFAIER(list);
 
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertAfter [%u]</h3>\n", prev_index);
+    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertAfter [%d]</h3>\n", prev_index);
 
     return success;
 }
 
 enum ReturnStatus DeleteElement(struct StructList* list,
-                                size_t del_index,
+                                int del_index,
                                 const int line, const char* func, const char* file)
 {
     assert(list != NULL);
 
     LIST_VERIFAIER(list);
 
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before Delete [%u]</h3>\n", del_index);
+    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before Delete [%d]</h3>\n", del_index);
 
-    //список пуст
-    if (list->tail == 1) {
-        printf("List is empty");
-        return error;
-    }
+    list->data[del_index] = PZN;
 
-    //удаление с конца
-    if (del_index == list->tail) {
+    list->next[list->prev[del_index]] = list->next[del_index];
 
-        list->data[del_index] = PZN;
+    list->prev[list->next[del_index]] = list->prev[del_index];
 
-        list->tail = list->prev[del_index];
+    list->prev[del_index] = -1;
 
-        list->next[list->prev[del_index]] = 0;
-        list->next[del_index] = list->free;
+    list->next[del_index] = list->free;
 
-        list->free = del_index;
-
-        list->prev[del_index] = -1;
-    }
-
-    //удаление первого элемента
-    else if (del_index == list->head) {
-
-       list->data[del_index] = PZN;
-
-       list->head = list->next[del_index];
-       list->prev[list->head] = 0;
-
-       list->next[del_index] = list->free;
-       list->free = del_index;
-
-       list->prev[del_index] = -1;
-
-    }
-
-    //удаление из середины
-    else {
-
-        list->data[del_index] = PZN;
-
-        list->next[list->prev[del_index]] = list->next[del_index];
-
-        list->prev[list->next[del_index]] = list->prev[del_index];
-
-        list->prev[del_index] = -1;
-
-        list->next[del_index] = list->free;
-        list->free = del_index;
-    }
+    list->free = del_index;
 
     LIST_VERIFAIER(list);
 
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After Delete [%u]</h3>\n", del_index);
+    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After Delete [%d]</h3>\n", del_index);
 
     return success;
 }
 
 void UserPrintList(struct StructList* list)
 {
-    for (int i = list->head; i != 0; i = list->next[i]) {
+    for (int i = list->next[0]; i != 0; i = list->next[i]) {
         printf("%d ", list->data[i]);
     }
     printf("\n");

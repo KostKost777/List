@@ -8,7 +8,7 @@ enum ReturnStatus ListVerifier(struct StructList* list)
     assert(list != NULL);
 
     //список пуст
-    if (list->tail == list->head)
+    if (list->prev[0] == list->next[0])
         return success;
 
     if (list->capacity == 0 || list->capacity > MAX_CAPACITY) {
@@ -16,13 +16,13 @@ enum ReturnStatus ListVerifier(struct StructList* list)
         return error;
     }
 
-    if (list->head >= list->capacity || list->prev[list->head] != 0) {
+    if (list->next[0] >= list->capacity || list->prev[list->next[0]] != 0) {
 
         list->err_code |= list_head_err;
         return error;
     }
 
-    if (list->tail >= list->capacity || list->next[list->tail] != 0) {
+    if (list->prev[0] >= list->capacity || list->next[list->prev[0]] != 0) {
 
         list->err_code |= list_tail_err;
         return error;
@@ -67,24 +67,24 @@ enum ReturnStatus ListVerifier(struct StructList* list)
 
         // проверка зациклинности
 
-        if (i == list->head && list->prev[list->next[i]] != i) {
+        if (i == list->next[0] && list->prev[list->next[i]] != i) {
 
-            //printf("H1 INDEX: %u\n", i);
+            //printf("H1 INDEX: %d\n", i);
             list->err_code |= list_loop_err;
             return error;
         }
 
-        if (i == list->tail && list->next[list->prev[i]] != i) {
+        if (i == list->prev[0] && list->next[list->prev[i]] != i) {
 
-            //printf("H2 INDEX: %u\n", i);
+            //printf("H2 INDEX: %d\n", i);
             list->err_code |= list_loop_err;
             return error;
         }
 
-        if (i != list->tail && i != list->head && list->data[i] != PZN
+        if (i != list->prev[0] && i != list->next[0] && list->data[i] != PZN
             && (list->next[list->prev[i]] != i || list->prev[list->next[i]] != i)) {
 
-            //printf("H3 INDEX: %u\n", i);
+            //printf("H3 INDEX: %d\n", i);
             list->err_code |= list_loop_err;
             return error;
 
@@ -148,7 +148,7 @@ enum ReturnStatus ListDump(struct StructList* list,
 
     FILE* graphiz_file = fopen(image_file_name, "w");
 
-    const size_t ORIGINAL_FREE = list->free;
+    const int ORIGINAL_FREE = list->free;
 
     fprintf(graphiz_file, "digraph {\n"
                           "rankdir = HR;\n"
@@ -177,11 +177,11 @@ enum ReturnStatus ListDump(struct StructList* list,
 
     const char* color = NULL;
 
-    for (size_t i = 0; i < list->capacity; i++) {
+    for (int i = 0; i < list->capacity; i++) {
 
         bool is_free_index = false;
 
-        for (size_t index_free_el = list->free;
+        for (int index_free_el = list->free;
                     index_free_el != 0;
                     index_free_el = list->next[index_free_el]) {
 
@@ -198,12 +198,12 @@ enum ReturnStatus ListDump(struct StructList* list,
         else
             color = "#77DD77";
 
-        fprintf(graphiz_file, "node%u "
+        fprintf(graphiz_file, "node%d "
                               "[shape = rectangle; "
                               "style = filled; "
                               "fillcolor = \"%s\"; "
                               "color = \"#80000\"; "
-                              "label = \"INDEX = %u \\n",
+                              "label = \"INDEX = %d \\n",
                                i, color, i);
 
         if (list->data[i] == PZN)
@@ -222,45 +222,45 @@ enum ReturnStatus ListDump(struct StructList* list,
 
     fprintf(graphiz_file, "{ rank = same; ");
 
-    for (size_t i = 0; i < list->capacity; ++i) {
-        fprintf(graphiz_file, "node%u; ", i);
+    for (int i = 0; i < list->capacity; ++i) {
+        fprintf(graphiz_file, "node%d; ", i);
     }
 
     fprintf(graphiz_file, "}\n");
 
     fprintf(graphiz_file, "{ rank = same; head; tail; free}\n");
 
-    for (size_t i = 0; i < list->capacity - 1; i++) {
-        fprintf(graphiz_file, "node%u -> node%u "
+    for (int i = 0; i < list->capacity - 1; i++) {
+        fprintf(graphiz_file, "node%d -> node%d "
                               "[color = \"transparent\";"
                               " weight=100]\n", i, i + 1);
     }
 
-    for (size_t i = list->head; i != list->tail; i = list->next[i]) {
-        fprintf(graphiz_file, "node%u -> node%d "
+    for (int i = list->next[0]; i != list->prev[0]; i = list->next[i]) {
+        fprintf(graphiz_file, "node%d -> node%d "
                               "[color = \"red\","
                               " weight=0]\n", i, list->next[i]);
     }
 
-    fprintf(graphiz_file, "node%u -> node0 "
+    fprintf(graphiz_file, "node%d -> node0 "
                           "[color = \"blue\","
-                          " weight=0]\n", list->tail);
+                          " weight=0]\n", list->prev[0]);
 
-    for (size_t i = list->tail; i != list->head; i = list->prev[i]) {
-        fprintf(graphiz_file, "node%u -> node%d "
+    for (int i = list->prev[0]; i != list->next[0]; i = list->prev[i]) {
+        fprintf(graphiz_file, "node%d -> node%d "
                               "[color = \"blue\","
                               " weight=0]\n", i, list->prev[i]);
     }
 
-    fprintf(graphiz_file, "head -> node%u "
+    fprintf(graphiz_file, "head -> node%d "
                           "[color = \"yellow\","
-                          " weight=100]\n", list->head);
+                          " weight=100]\n", list->next[0]);
 
-    fprintf(graphiz_file, "tail -> node%u "
+    fprintf(graphiz_file, "tail -> node%d "
                           "[color = \"yellow\","
-                          " weight=100]\n", list->tail);
+                          " weight=100]\n", list->prev[0]);
 
-    fprintf(graphiz_file, "free -> node%u "
+    fprintf(graphiz_file, "free -> node%d "
                           "[color = \"yellow\","
                           " weight=100]\n", ORIGINAL_FREE);
 
@@ -309,31 +309,31 @@ void FillLogFile(char* image_file_name, struct StructList* list, int file_counte
     assert(image_file_name != NULL);
     assert(list != NULL);
 
-    fprintf(log_file, "HEAD: %u\n", list->head);
-    fprintf(log_file, "TAIL: %u\n", list->tail);
-    fprintf(log_file, "FREE: %u\n\n", list->free);
+    fprintf(log_file, "HEAD: %d\n", list->next[0]);
+    fprintf(log_file, "TAIL: %d\n", list->prev[0]);
+    fprintf(log_file, "FREE: %d\n\n", list->free);
 
     fprintf(log_file, "INDX: ");
 
-    for (size_t i = 0; i < list->capacity; ++i) {
-        fprintf(log_file, "|%3u| ", i);
+    for (int i = 0; i < list->capacity; ++i) {
+        fprintf(log_file, "|%3d| ", i);
     }
 
     fprintf(log_file, "\nDATA: ");
 
-    for (size_t i = 0; i < list->capacity; ++i) {
+    for (int i = 0; i < list->capacity; ++i) {
         fprintf(log_file, "|%3d| ", list->data[i]);
     }
 
     fprintf(log_file, "\nNEXT: ");
 
-    for (size_t i = 0; i < list->capacity; ++i) {
+    for (int i = 0; i < list->capacity; ++i) {
         fprintf(log_file, "|%3d| ", list->next[i]);
     }
 
     fprintf(log_file, "\nPREV: ");
 
-    for (size_t i = 0; i < list->capacity; ++i) {
+    for (int i = 0; i < list->capacity; ++i) {
         fprintf(log_file, "|%3d| ", list->prev[i]);
     }
 
