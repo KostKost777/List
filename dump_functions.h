@@ -29,17 +29,17 @@ void FillLogFile(char* image_file_name, struct StructList* list, int file_counte
 enum ReturnStatus ListVerifier(struct StructList* list);
 
 void PrintDumpLog(struct StructList* list,
-                   const int line, const char* func, const char* file,
-                   const char* message, ...);
+                  const int line, const char* func, const char* file,
+                  const char* message, ...);
 
-#define LIST_VERIFIER(list)                            \
+#define LIST_VERIFIER(list)                             \
     if (ListVerifier(list) == error) {                  \
-        printf("Ошибка %d\n", list->err_code);            \
-        ListDump(list, line, func, file);                \
+        printf("Ошибка %d\n", GetErrCode(list));        \
+        ListDump(list, line, func, file);               \
         return error;                                   \
-    }                                                \
+    }                                                   \
 
-#define PRINT_DUMP_LOG(list, message, ...)                    \
+#define PRINT_DUMP_LOG(list, message, ...)                                \
         PrintDumpLog(list, line, func, file, message, ##__VA_ARGS__);     \
 
 #endif

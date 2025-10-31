@@ -2,6 +2,7 @@
 
 #include "list_functions.h"
 #include "dump_functions.h"
+#include "set_get_functions.h"
 
 const char* log_file_name = "";
 FILE* log_file = NULL;
@@ -32,84 +33,88 @@ enum ReturnStatus ListVerifier(struct StructList* list)
     assert(list != NULL);
 
     //список пуст
-    if (list->prev[0] == list->next[0] && list->next[0] == 0)
+    if (GetTail(list) == GetHead(list) && GetHead(list) == 0)
         return success;
 
-    if (list->data[0] != CANARY) {
-        list->err_code |= list_canary_err;
+    if (GetDataEl(list, 0) != CANARY) {
+
+        SetErrCode(list, GetErrCode(list) | list_canary_err);
         return error;
     }
 
-    if (list->capacity <= 0 || list->capacity > MAX_CAPACITY) {
-        list->err_code |= list_capacity_err;
+    if (GetCapacity(list) <= 0 || GetCapacity(list) > MAX_CAPACITY) {
+
+        SetErrCode(list, GetErrCode(list) | list_capacity_err);
         return error;
     }
 
-    if (list->next[0] >= list->capacity || list->prev[list->next[0]] != 0) {
+    if (GetHead(list) >= GetCapacity(list) || GetPrevEl(list, GetHead(list)) != 0) {
 
-        list->err_code |= list_head_err;
+        SetErrCode(list, GetErrCode(list) | list_head_err);
         return error;
     }
 
-    if (list->prev[0] >= list->capacity || list->next[list->prev[0]] != 0) {
+    if (GetTail(list) >= GetCapacity(list) || GetNextEl(list, GetTail(list)) != 0) {
 
-        list->err_code |= list_tail_err;
+        SetErrCode(list, GetErrCode(list) | list_tail_err);
         return error;
     }
 
-    //printf("DATA_FREE: %d\n", list->data[list->free]);
 
-    if (list->free != 0 && (list->free >= list->capacity
-        || (list->data[list->free] != PZN || list->prev[list->free] != -1))) {
 
-        list->err_code |= list_free_err;
+    if (GetFree(list) != 0 && (GetFree(list) >= GetCapacity(list)
+        || (GetDataEl(list, GetFree(list)) != PZN
+        || GetPrevEl(list, GetFree(list)) != -1))) {
+
+        SetErrCode(list, GetErrCode(list) | list_free_err);
         return error;
     }
 
-    for (int i = 1; i < list->capacity; i++) {
+    for (int i = 1; i < GetCapacity(list); i++) {
 
-        if (   (list->prev[i] == -1 && list->data[i] != PZN)
-            || (list->prev[i] != -1 && list->data[i] == PZN)) {
+        if (   (GetPrevEl(list, i) == -1 && GetDataEl(list, i) != PZN)
+            || (GetPrevEl(list, i) != -1 && GetDataEl(list, i) == PZN)) {
 
-            list->err_code |= list_PZN_err;
+            SetErrCode(list, GetErrCode(list) | list_PZN_err);
             return error;
 
         }
 
-        if (list->next[i] >= list->capacity) {
+        if (GetNextEl(list, i) >= GetCapacity(list)) {
 
-            list->err_code |= list_next_err;
+            SetErrCode(list, GetErrCode(list) | list_next_err);
             return error;
         }
 
-        if (  (list->prev[i] >= 0 && list->prev[i] >= list->capacity)
-            || list->prev[i] < -1) {
+        if (  (GetPrevEl(list, i) >= 0 && GetPrevEl(list, i) >= GetCapacity(list))
+            || GetPrevEl(list, i) < -1) {
 
-            list->err_code |= list_prev_err;
+            SetErrCode(list, GetErrCode(list) | list_prev_err);
             return error;
         }
 
         // проверка зациклинности
 
-        if (i == list->next[0] && list->prev[list->next[i]] != i) {
+        if (i == GetHead(list) && GetPrevEl(list, GetNextEl(list, i)) != i) {
 
             //printf("H1 INDEX: %d\n", i);
-            list->err_code |= list_loop_err;
+            SetErrCode(list, GetErrCode(list) | list_loop_err);
             return error;
         }
 
-        if (i == list->prev[0] && list->next[list->prev[i]] != i) {
+        if (i == GetTail(list) && GetNextEl(list, GetPrevEl(list, i)) != i) {
 
             //printf("H2 INDEX: %d\n", i);
-            list->err_code |= list_loop_err;
+            SetErrCode(list, GetErrCode(list) | list_loop_err);
             return error;
         }
 
-        if (i != list->prev[0] && i != list->next[0] && list->data[i] != PZN
-            && (list->next[list->prev[i]] != i || list->prev[list->next[i]] != i)) {
+        if (i != GetTail(list) && i != GetHead(list) && GetDataEl(list, i) != PZN
+            && (GetNextEl(list, GetPrevEl(list, i)) != i
+             || GetPrevEl(list, GetNextEl(list, i)) != i)) {
 
             //printf("H3 INDEX: %d\n", i);
-            list->err_code |= list_loop_err;
+            SetErrCode(list, GetErrCode(list) | list_loop_err);
             return error;
 
         }
@@ -117,23 +122,23 @@ enum ReturnStatus ListVerifier(struct StructList* list)
 
     int count_el = 0;
 
-    for (int i = list->next[0]; i != 0; i = list->next[i])
+    for (int i = GetHead(list); i != 0; i = GetNextEl(list, i))
         count_el++;
 
     //printf("COUNTER: %d\n", count_el);
 
-    if (list->num_of_el != count_el) {
-        list->err_code |= list_num_of_el_err;
+    if (GetNumOfEl(list) != count_el) {
+        SetErrCode(list, GetErrCode(list) | list_num_of_el_err);
         return error;
     }
 
     count_el = 0;
 
-    for (int i = list->prev[0]; i != 0; i = list->prev[i])
+    for (int i = GetTail(list); i != 0; i = GetPrevEl(list, i))
         count_el++;
 
-    if (list->num_of_el != count_el) {
-        list->err_code |= list_num_of_el_err;
+    if (GetNumOfEl(list) != count_el) {
+        SetErrCode(list, GetErrCode(list) | list_num_of_el_err);
         return error;
     }
 
@@ -144,34 +149,34 @@ void PrintError(struct StructList* list)
 {
     assert(list != NULL);
 
-    if (list->err_code & list_loop_err)
+    if (GetErrCode(list) & list_loop_err)
         fprintf(log_file, "<h2>BAD_LIST_LOOP - [%d]</h2>\n", list_loop_err);
 
-    if (list->err_code & list_capacity_err)
+    if (GetErrCode(list) & list_capacity_err)
         fprintf(log_file, "<h2>BAD_CAPACITY - [%d]</h2>\n", list_capacity_err);
 
-    if (list->err_code & list_head_err)
+    if (GetErrCode(list) & list_head_err)
         fprintf(log_file, "<h2>BAD_HEAD - [%d]</h2>\n", list_head_err);
 
-    if (list->err_code & list_tail_err)
+    if (GetErrCode(list) & list_tail_err)
         fprintf(log_file, "<h2>BAD_TAIL - [%d]</h2>\n", list_tail_err);
 
-    if (list->err_code & list_free_err)
+    if (GetErrCode(list) & list_free_err)
         fprintf(log_file, "<h2>BAD_FREE - [%d]</h2>\n", list_free_err);
 
-    if (list->err_code & list_PZN_err)
+    if (GetErrCode(list) & list_PZN_err)
         fprintf(log_file, "<h2>BAD_PZN - [%d]</h2>\n", list_PZN_err);
 
-    if (list->err_code & list_next_err)
+    if (GetErrCode(list) & list_next_err)
         fprintf(log_file, "<h2>BAD_NEXT - [%d]</h2>\n", list_next_err);
 
-    if (list->err_code & list_prev_err)
+    if (GetErrCode(list) & list_prev_err)
         fprintf(log_file, "<h2>BAD_PREV - [%d]</h2>\n", list_loop_err);
 
-    if (list->err_code & list_canary_err)
+    if (GetErrCode(list) & list_canary_err)
         fprintf(log_file, "<h2>BAD_CANARY - [%d]</h2>\n", list_canary_err);
 
-    if (list->err_code & list_num_of_el_err)
+    if (GetErrCode(list) & list_num_of_el_err)
         fprintf(log_file, "<h2>BAD_NUM_OF_ELEMENT - [%d]</h2>\n", list_num_of_el_err);
 
 
@@ -184,7 +189,7 @@ enum ReturnStatus ListDump(struct StructList* list,
     assert(func != NULL);
     assert(file != NULL);
 
-    if (list->err_code != 0) {
+    if (GetErrCode(list) != 0) {
         PrintError(list);
         //return fatal_error;
     }
@@ -196,8 +201,6 @@ enum ReturnStatus ListDump(struct StructList* list,
     char* image_file_name = GetNewImageFileName(file_counter);
 
     FILE* graphiz_file = fopen(image_file_name, "w");
-
-    const int ORIGINAL_FREE = list->free;
 
     fprintf(graphiz_file, "digraph {\n"
                           "rankdir = HR;\n"
@@ -228,13 +231,13 @@ enum ReturnStatus ListDump(struct StructList* list,
 
     const char* color = NULL;
 
-    for (int i = 0; i < list->capacity; i++) {
+    for (int i = 0; i < GetCapacity(list); i++) {
 
         bool is_free_index = false;
 
-        for (int index_free_el = list->free;
-                    index_free_el != 0;
-                    index_free_el = list->next[index_free_el]) {
+        for (int index_free_el = GetFree(list);
+                 index_free_el != 0;
+                 index_free_el = GetNextEl(list, index_free_el)) {
 
                  if (i == index_free_el) {
                     is_free_index = true;
@@ -249,11 +252,11 @@ enum ReturnStatus ListDump(struct StructList* list,
 
             color = "#F14065";
 
-        else if(i == list->next[0])
+        else if(i == GetHead(list))
 
             color = "#F2B138";
 
-        else if (i == list->prev[0])
+        else if (i == GetTail(list))
 
             color = "#5F85BB";
 
@@ -269,23 +272,23 @@ enum ReturnStatus ListDump(struct StructList* list,
                               "label = \"{INDEX = %d |",
                                i, color, i);
 
-        if (list->data[i] == PZN)
+        if (GetDataEl(list, i) == PZN)
             fprintf(graphiz_file, "DATA = PZN |");
 
         else
-            fprintf(graphiz_file, "DATA = %d |", list->data[i]);
+            fprintf(graphiz_file, "DATA = %d |", GetDataEl(list, i));
 
         fprintf(graphiz_file, "{NEXT = %d |"
                               "PREV = %d  }}"
                               "\"; ]\n",
-                              list->next[i],
-                              list->prev[i]);
+                              GetNextEl(list, i),
+                              GetPrevEl(list, i));
 
     }
 
     fprintf(graphiz_file, "{ rank = same; ");
 
-    for (int i = 0; i < list->capacity; ++i) {
+    for (int i = 0; i < GetCapacity(list); ++i) {
         fprintf(graphiz_file, "node%d; ", i);
     }
 
@@ -293,19 +296,19 @@ enum ReturnStatus ListDump(struct StructList* list,
 
     fprintf(graphiz_file, "{ rank = same; head; tail; free}\n");
 
-    for (int i = 0; i < list->capacity - 1; i++) {
+    for (int i = 0; i < GetCapacity(list) - 1; i++) {
         fprintf(graphiz_file, "node%d -> node%d "
                               "[color = \"transparent\";"
                               " weight=10]\n", i, i + 1);
     }
 
-    for (int i = list->next[0]; i != list->prev[0]; i = list->next[i]) {
+    for (int i = GetHead(list); i != GetTail(list); i = GetNextEl(list, i)) {
 
-        if (i == list->prev[list->next[i]])
+        if (i == GetPrevEl(list, GetNextEl(list, i)))
             fprintf(graphiz_file, "node%d -> node%d "
                           "[color = \"black\", "
                           "dir = both, "
-                          " weight=0]\n", i, list->next[i]);
+                          " weight=0]\n", i, GetNextEl(list, i));
 
     }
 
@@ -317,37 +320,34 @@ enum ReturnStatus ListDump(struct StructList* list,
 
     fprintf(graphiz_file, "node%d -> node0 "
                           "[color = \"#CD00CD\","
-                          " weight=0]\n", list->prev[0]);
+                          " weight=0]\n", GetTail(list));
 
     fprintf(graphiz_file, "node0 -> node%d "
                           "[color = \"#CD00CD\","
-                          " weight=0]\n", list->next[0]);
+                          " weight=0]\n", GetHead(list));
 
 
     fprintf(graphiz_file, "head -> node%d "
                           "[color = \"#F2B138\","
-                          " weight=10]\n", list->next[0]);
+                          " weight=10]\n", GetHead(list));
 
     fprintf(graphiz_file, "tail -> node%d "
                           "[color = \"#5F85BB\","
-                          " weight=10]\n", list->prev[0]);
+                          " weight=10]\n", GetTail(list));
 
     fprintf(graphiz_file, "free -> node%d "
                           "[color = \"#F14065\","
-                          " weight=10]\n", ORIGINAL_FREE);
+                          " weight=10]\n", GetFree(list));
 
     fprintf(graphiz_file, "}");
 
     fclose(graphiz_file);
     free(image_file_name);
 
-
     char* command = GetNewDotCmd(file_counter);
     //printf("%s\n", command);
     system(command);
     free(command);
-
-    list->free = ORIGINAL_FREE;
 
     FillLogFile(image_file_name, list, file_counter);
 
@@ -361,36 +361,37 @@ void FillLogFile(char* image_file_name, struct StructList* list, int file_counte
     assert(image_file_name != NULL);
     assert(list != NULL);
 
-    fprintf(log_file, "HEAD: %d\n", list->next[0]);
-    fprintf(log_file, "TAIL: %d\n", list->prev[0]);
-    fprintf(log_file, "FREE: %d\n\n", list->free);
+    fprintf(log_file, "HEAD: %d\n", GetHead(list));
+    fprintf(log_file, "TAIL: %d\n", GetTail(list));
+    fprintf(log_file, "FREE: %d\n\n", GetFree(list));
 
     fprintf(log_file, "INDX: ");
 
-    for (int i = 0; i < list->capacity; ++i) {
+    for (int i = 0; i < GetCapacity(list); ++i) {
         fprintf(log_file, "|%3d| ", i);
     }
 
     fprintf(log_file, "\nDATA: ");
 
-    for (int i = 0; i < list->capacity; ++i) {
-        fprintf(log_file, "|%3d| ", list->data[i]);
+    for (int i = 0; i < GetCapacity(list); ++i) {
+        fprintf(log_file, "|%3d| ", GetDataEl(list, i));
     }
 
     fprintf(log_file, "\nNEXT: ");
 
-    for (int i = 0; i < list->capacity; ++i) {
-        fprintf(log_file, "|%3d| ", list->next[i]);
+    for (int i = 0; i < GetCapacity(list) ; ++i) {
+        fprintf(log_file, "|%3d| ", GetNextEl(list, i));
     }
 
     fprintf(log_file, "\nPREV: ");
 
-    for (int i = 0; i < list->capacity; ++i) {
-        fprintf(log_file, "|%3d| ", list->prev[i]);
+    for (int i = 0; i < GetCapacity(list) ; ++i) {
+        fprintf(log_file, "|%3d| ", GetPrevEl(list, i));
     }
 
-    fprintf(log_file, "\n\n<img src=image%d.png width=%dpx>\n\n", file_counter,
-                                                                list->capacity * 200);
+    fprintf(log_file, "\n\n<img src=image%d.png width=%dpx>\n\n",
+                                                    file_counter,
+                                                    GetCapacity(list) * 200);
 
     fprintf(log_file, "-------------------------------------------------------\n");
 

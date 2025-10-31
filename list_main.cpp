@@ -3,6 +3,7 @@
 
 #include "list_functions.h"
 #include "dump_functions.h"
+#include "set_get_functions.h"
 
 int main()
 {
@@ -33,6 +34,10 @@ int main()
     INSERT_BEFORE(&list, 1, 5, exit_label);
 
     DELETE_ELEMENT(&list, 6, exit_label);
+
+    DELETE_ELEMENT(&list, 1, exit_label);
+
+    DELETE_ELEMENT(&list, 3, exit_label);
 
     UserPrintList(&list);
 
