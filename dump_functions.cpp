@@ -191,7 +191,7 @@ enum ReturnStatus ListDump(struct StructList* list,
 
     if (GetErrCode(list) != 0) {
         PrintError(list);
-        //return fatal_error;
+        return fatal_error;
     }
 
     fprintf(log_file, "<h4>LIST { %s %s:%d }</h4>\n", func, file, line);

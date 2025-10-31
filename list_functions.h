@@ -45,6 +45,8 @@ enum ReturnStatus DeleteElement(struct StructList* list,
 
 enum ReturnStatus OpenLogFile();
 
+enum ReturnStatus AllocateNewCapacity(struct StructList* list);
+
 void CloseLogFile();
 
 #define INSERT_AFTER(list, index, element, label)                        \

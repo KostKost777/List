@@ -27,17 +27,21 @@ int main()
 
     INSERT_AFTER(&list, 3, 40, exit_label);
 
-    INSERT_AFTER(&list, 4, 50, exit_label);
+    INSERT_AFTER(&list, 4, 55, exit_label);
 
-    INSERT_BEFORE(&list, 3, 25, exit_label);
+    INSERT_AFTER(&list, 5, 59, exit_label);
+
+    INSERT_BEFORE(&list, 2, 15, exit_label);
+
+    INSERT_BEFORE(&list, 2, 60, exit_label);
 
     INSERT_BEFORE(&list, 1, 5, exit_label);
 
-    DELETE_ELEMENT(&list, 6, exit_label);
+    INSERT_BEFORE(&list, 1, 5, exit_label);
 
-    DELETE_ELEMENT(&list, 1, exit_label);
+    INSERT_BEFORE(&list, 1, 5, exit_label);
 
-    DELETE_ELEMENT(&list, 3, exit_label);
+    INSERT_BEFORE(&list, 1, 5, exit_label);
 
     UserPrintList(&list);
 
