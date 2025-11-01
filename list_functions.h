@@ -31,6 +31,8 @@ void ListDtor(struct StructList* list);
 
 void UserPrintList(struct StructList* list);
 
+int Insert(struct StructList* list, int index, int value);
+
 int InsertAfter(struct StructList* list,
                 int prev_index, int value,
                 const int LINE, const char* FUNC, const char* FILE);

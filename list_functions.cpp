@@ -2,17 +2,18 @@
 
 #include "list_functions.h"
 #include "dump_functions.h"
+#include "set_get_functions.h"
 
 static void SetDefaultNext(struct StructList* list)
 {
     assert(list != NULL);
 
-    list->next[0] = 0;
+    SetHead(list, 0);
 
-    for (int i = 1; i < list->capacity; ++i)
-        list->next[i] = i + 1;
+    for (int i = 1; i < GetCapacity(list); ++i)
+        SetNextEl(list, i, i + 1);
 
-    list->next[list->capacity - 1] = 0;
+    SetNextEl(list, GetCapacity(list) - 1, 0);
 
 }
 
@@ -20,10 +21,10 @@ static void SetDefaultData(struct StructList* list)
 {
     assert(list != NULL);
 
-    list->data[0] = CANARY;
+    SetDataEl(list, 0, CANARY);
 
-    for (int i = 1; i < list->capacity; ++i)
-        list->data[i] = PZN;
+    for (int i = 1; i < GetCapacity(list); ++i)
+        SetDataEl(list, i, PZN);
 
 }
 
@@ -31,10 +32,10 @@ static void SetDefaultPrev(struct StructList* list)
 {
     assert(list != NULL);
 
-    list->prev[0] = 0;
+    SetTail(list, 0);
 
-    for (int i = 1; i < list->capacity; ++i)
-        list->prev[i] = -1;
+    for (int i = 1; i < GetCapacity(list); ++i)
+        SetPrevEl(list, i, -1);
 
 }
 
@@ -42,13 +43,13 @@ ReturnStatus ListCtor(struct StructList* list, int capacity)
 {
     assert(list != NULL);
 
-    list->capacity = capacity;
+    SetCapacity(list, capacity);
 
-    list->data = (int*)calloc(list->capacity, sizeof(int));
+    list->data = (int*)calloc(GetCapacity(list), sizeof(int));
 
-    list->next = (int*)calloc(list->capacity, sizeof(int));
+    list->next = (int*)calloc(GetCapacity(list), sizeof(int));
 
-    list->prev = (int*)calloc(list->capacity, sizeof(int));
+    list->prev = (int*)calloc(GetCapacity(list), sizeof(int));
 
     if (list->data == NULL || list->next == NULL || list->prev == NULL) {
         printf("Memory was not allocated");
@@ -59,9 +60,9 @@ ReturnStatus ListCtor(struct StructList* list, int capacity)
     SetDefaultPrev(list);
     SetDefaultData(list);
 
-    list->num_of_el = 0;
-    list->free = 1;
-    list->err_code = 0;
+    SetNumOfEl(list, 0);
+    SetFree(list, 1);
+    SetErrCode(list, 0);
 
     return success;
 }
@@ -79,6 +80,42 @@ void ListDtor(struct StructList* list)
     list->prev = NULL;
 }
 
+int Insert(struct StructList* list, int index, int value)
+{
+    if (   index < 0
+        || GetPrevEl(list, index) == -1
+        || GetPrevEl(list, index) >= GetCapacity(list)) {
+
+        fprintf(log_file, "<h2>This element with index(%d) did not exist</h2>\n",
+                                                                          index);
+        return error;
+    }
+
+    if (GetNumOfEl(list) >= GetCapacity(list) - 1) {
+        if (AllocateNewCapacity(list) == error)
+            return error;
+    }
+
+    SetDataEl(list, GetFree(list), value);
+
+    int old_free = GetFree(list);
+
+    SetFree(list, GetNextEl(list, GetFree(list)));
+
+    SetNextEl(list, old_free, GetNextEl(list, index));
+
+    SetPrevEl(list, GetNextEl(list, index), old_free);
+
+    SetNextEl(list, index, old_free);
+
+    SetPrevEl(list, old_free, index);
+
+    SetNumOfEl(list, GetNumOfEl(list) + 1);
+
+    return old_free;
+}
+
+
 int InsertAfter(struct StructList* list,
                 int index, int value,
                 const int line, const char* func, const char* file)
@@ -88,47 +125,15 @@ int InsertAfter(struct StructList* list,
     assert(file != NULL);
 
     LIST_VERIFIER(list);
-
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertAfter(%d, %d)</h3>\n",
                                                            index, value);
-
-    if (   index < 0
-        || list->prev[index] == -1
-        || list->prev[index] >= list->capacity) {
-
-        fprintf(log_file, "<h2>This element with index(%d) did not exist</h2>\n",
-                                                                          index);
-        return error;
-    }
-
-    if (list->num_of_el >= list->capacity - 1) {
-
-        fprintf(log_file, "<h2>Not enough capacity</h2>\n");
-        return error;
-    }
-
-    list->data[list->free] = value;
-
-    int old_free = list->free;
-
-    list->free = list->next[list->free];
-
-    list->next[old_free] = list->next[index];
-
-    list->prev[list->next[index]] = old_free;
-
-    list->next[index] = old_free;
-
-    list->prev[old_free] = index;
-
-    list->num_of_el++;
+    int ret_value = Insert(list, index, value);
 
     LIST_VERIFIER(list);
-
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertAfter(%d, %d)</h3>\n",
                                                            index, value);
 
-    return old_free;
+    return ret_value;
 }
 
 int InsertBefore(struct StructList* list,
@@ -140,46 +145,16 @@ int InsertBefore(struct StructList* list,
     assert(file != NULL);
 
     LIST_VERIFIER(list);
-
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertBefore(%d, %d)</h3>\n",
-                                                            index, value);
+                                                           index, value);
 
-    if (   index < 0
-        || list->prev[index] == -1
-        || list->prev[index] >= list->capacity) {
-
-        fprintf(log_file, "<h2>This element with index(%d) did not exist</h2>\n",
-                                                                      index);
-        return error;
-    }
-
-    if (list->num_of_el >= list->capacity - 1) {
-
-        fprintf(log_file, "<h2>Not enough capacity</h2>\n");
-        return error;
-    }
-
-    list->data[list->free] = value;
-
-    int old_free = list->free;
-
-    list->free = list->next[list->free];
-
-    list->next[list->prev[index]] = old_free;
-
-    list->next[old_free] = index;
-
-    list->prev[old_free] = list->prev[index];
-
-    list->prev[index] = old_free;
-
-    list->num_of_el++;
+    int ret_value = Insert(list, GetPrevEl(list, index), value);
 
     LIST_VERIFIER(list);
-
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertBefore(%d, %d)</h3>\n",
                                                            index, value);
-    return old_free;
+
+    return ret_value;
 }
 
 enum ReturnStatus DeleteElement(struct StructList* list,
@@ -191,31 +166,30 @@ enum ReturnStatus DeleteElement(struct StructList* list,
     assert(file != NULL);
 
     LIST_VERIFIER(list);
-
     PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before Delete(%d)</h3>\n", del_index);
 
-    if (   del_index <= 0
-        || list->prev[del_index] == -1
-        || list->prev[del_index] >= list->capacity) {
+    if (   del_index < 0
+        || GetPrevEl(list, del_index) == -1
+        || GetPrevEl(list, del_index) >= GetCapacity(list)) {
 
         fprintf(log_file, "<h2>This element with index(%d) did not exist</h2>\n",
                                                                       del_index);
         return error;
     }
 
-    list->data[del_index] = PZN;
+    SetDataEl(list, del_index, PZN);
 
-    list->next[list->prev[del_index]] = list->next[del_index];
+    SetNextEl(list, GetPrevEl(list, del_index), GetNextEl(list, del_index));
 
-    list->prev[list->next[del_index]] = list->prev[del_index];
+    SetPrevEl(list, GetNextEl(list, del_index), GetPrevEl(list, del_index));
 
-    list->prev[del_index] = -1;
+    SetPrevEl(list, del_index, -1);
 
-    list->next[del_index] = list->free;
+    SetNextEl(list, del_index, list->free);
 
-    list->free = del_index;
+    SetFree(list, del_index);
 
-    list->num_of_el--;
+    SetNumOfEl(list, GetNumOfEl(list) - 1);
 
     LIST_VERIFIER(list);
 
@@ -226,8 +200,8 @@ enum ReturnStatus DeleteElement(struct StructList* list,
 
 void UserPrintList(struct StructList* list)
 {
-    for (int i = list->next[0]; i != 0; i = list->next[i]) {
-        printf("%d ", list->data[i]);
+    for (int i = GetHead(list); i != 0; i = GetNextEl(list, i)) {
+        printf("%d ", GetDataEl(list, i));
     }
     printf("\n");
 }
@@ -250,6 +224,55 @@ enum ReturnStatus OpenLogFile()
     printf("Logfile open success\n");
 
     fprintf(log_file, "<pre>\n");
+
+    return success;
+}
+
+enum ReturnStatus AllocateNewCapacity(struct StructList* list)
+{
+    assert(list != NULL);
+
+    int* new_data = (int*)realloc(list->data, sizeof(int) * GetCapacity(list) * 2);
+    int* new_next = (int*)realloc(list->next, sizeof(int) * GetCapacity(list) * 2);
+    int* new_prev = (int*)realloc(list->prev, sizeof(int) *  GetCapacity(list) * 2);
+
+    if (new_data == NULL || new_next == NULL || new_prev == NULL) {
+        free(new_data);
+        free(new_next);
+        free(new_prev);
+
+        new_data = NULL;
+        new_next = NULL;
+        new_prev = NULL;
+
+        fprintf(log_file, "<h2> Memory did not allocate </h2>\n");
+
+        return error;
+    }
+
+    list->data = new_data;
+    list->next = new_next;
+    list->prev = new_prev;
+
+    for (int i = GetCapacity(list); i < 2 * GetCapacity(list); ++i) {
+        SetDataEl(list, i, PZN);
+    }
+
+    for (int i = GetCapacity(list); i < 2 * GetCapacity(list); ++i) {
+        SetNextEl(list, i, i + 1);
+    }
+
+    SetNextEl(list, 2 * GetCapacity(list) - 1, 0);
+
+    SetFree(list, GetCapacity(list));
+
+    for (int i = GetCapacity(list); i < 2 * GetCapacity(list); ++i) {
+        SetPrevEl(list, i, -1);
+    }
+
+    SetCapacity(list, 2 * GetCapacity(list));
+
+    ListDump(list, 1, "a", "a");
 
     return success;
 }

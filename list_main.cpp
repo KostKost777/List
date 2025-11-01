@@ -16,32 +16,28 @@ int main()
     if (OpenLogFile())
         goto exit_label;
 
-    if (ListCtor(&list, 10))
+    if (ListCtor(&list, 5))
         goto exit_label;
 
-    INSERT_AFTER(&list, 0, 10, exit_label);
+    INSERT_AFTER(&list, 0, 100, exit_label);
 
-    INSERT_AFTER(&list, 1, 20, exit_label);
+    INSERT_AFTER(&list, 1, 200, exit_label);
 
-    INSERT_AFTER(&list, 2, 30, exit_label);
+    INSERT_AFTER(&list, 2, 300, exit_label);
 
-    INSERT_AFTER(&list, 3, 40, exit_label);
+    INSERT_AFTER(&list, 3, 400, exit_label);
 
-    INSERT_AFTER(&list, 4, 55, exit_label);
+    INSERT_AFTER(&list, 4, 500, exit_label);
 
-    INSERT_AFTER(&list, 5, 59, exit_label);
+    INSERT_AFTER(&list, 5, 600, exit_label);
 
-    INSERT_BEFORE(&list, 2, 15, exit_label);
+    INSERT_AFTER(&list, 6, 700, exit_label);
 
-    INSERT_BEFORE(&list, 2, 60, exit_label);
+    INSERT_BEFORE(&list, 7, 750, exit_label);
 
-    INSERT_BEFORE(&list, 1, 5, exit_label);
+    DELETE_ELEMENT(&list, 3, exit_label);
 
-    INSERT_BEFORE(&list, 1, 5, exit_label);
-
-    INSERT_BEFORE(&list, 1, 5, exit_label);
-
-    INSERT_BEFORE(&list, 1, 5, exit_label);
+    INSERT_AFTER(&list, 8, 900, exit_label);
 
     UserPrintList(&list);
 
