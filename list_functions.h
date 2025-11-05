@@ -29,7 +29,7 @@ enum ReturnStatus ListCtor (struct StructList* list, int capacity);
 
 void ListDtor(struct StructList* list);
 
-void UserPrintList(struct StructList* list);
+int UserPrintList(struct StructList* list);
 
 int Insert(struct StructList* list, int index, int value);
 
@@ -47,24 +47,30 @@ enum ReturnStatus DeleteElement(struct StructList* list,
 
 enum ReturnStatus OpenLogFile();
 
-enum ReturnStatus AllocateNewCapacity(struct StructList* list);
+enum ReturnStatus UpwardReallocate(struct StructList* list);
+
+enum ReturnStatus DownwardReallocate(struct StructList* list);
 
 void CloseLogFile();
 
+void SwapNode(struct StructList* list, int ind1, int ind2);
+
+int SortList(struct StructList* list);
+
 #define INSERT_AFTER(list, index, element, label)                        \
-    if ((out_index = InsertAfter(list, index, element,                          \
+    if ((ret_value = InsertAfter(list, index, element,                          \
                     __LINE__, __func__, __FILE__)) == -1) {      \
         goto label;                                                \
     }
 
 #define INSERT_BEFORE(list, index, element, label)                        \
-    if ((out_index = InsertBefore(list, index, element,                          \
+    if ((ret_value = InsertBefore(list, index, element,                          \
                     __LINE__, __func__, __FILE__)) == -1) {      \
         goto label;                                                \
     }
 
 #define DELETE_ELEMENT(list, index, label)                        \
-    if ((out_index = DeleteElement(list, index,                          \
+    if ((ret_value = DeleteElement(list, index,                          \
                     __LINE__, __func__, __FILE__)) == -1) {      \
         goto label;                                                \
     }

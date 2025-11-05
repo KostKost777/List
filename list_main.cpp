@@ -7,7 +7,7 @@
 
 int main()
 {
-    int out_index = 0;
+    int ret_value = 0;
 
     struct StructList list = {};
 
@@ -19,33 +19,45 @@ int main()
     if (ListCtor(&list, 5))
         goto exit_label;
 
-    INSERT_AFTER(&list, 0, 100, exit_label);
+    INSERT_AFTER(&list, 0, 200, exit_label);
 
-    INSERT_AFTER(&list, 1, 200, exit_label);
+    INSERT_AFTER(&list, 1, 100, exit_label);
 
-    INSERT_AFTER(&list, 2, 300, exit_label);
+    INSERT_AFTER(&list, 2, 500, exit_label);
 
     INSERT_AFTER(&list, 3, 400, exit_label);
 
-    INSERT_AFTER(&list, 4, 500, exit_label);
+    INSERT_AFTER(&list, 2, 399, exit_label);
 
-    INSERT_AFTER(&list, 5, 600, exit_label);
+    INSERT_AFTER(&list, 0, 12, exit_label);
 
-    INSERT_AFTER(&list, 6, 700, exit_label);
+    INSERT_AFTER(&list, 5, 1, exit_label);
 
-    INSERT_BEFORE(&list, 7, 750, exit_label);
+    INSERT_AFTER(&list, 4, 230, exit_label);
 
-    DELETE_ELEMENT(&list, 3, exit_label);
+    INSERT_AFTER(&list, 6, 888, exit_label);
 
-    INSERT_AFTER(&list, 8, 900, exit_label);
+    INSERT_AFTER(&list, 7, 991, exit_label);
 
     UserPrintList(&list);
+
+    DELETE_ELEMENT(&list, 3, exit_label);
+    DELETE_ELEMENT(&list, 4, exit_label);
+    DELETE_ELEMENT(&list, 1, exit_label);
+
+    DownwardReallocate(&list);
+
+    //SortList(&list);
+
+    UserPrintList(&list);
+
+    ListDump(&list, __LINE__, __func__, __FILE__);
 
     exit_label:
 
         ListDtor(&list);
 
-        if (out_index != -1) {
+        if (ret_value != -1) {
             printf("END SUCCESS\n");
             return 0;
         }

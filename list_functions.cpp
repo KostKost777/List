@@ -92,7 +92,7 @@ int Insert(struct StructList* list, int index, int value)
     }
 
     if (GetNumOfEl(list) >= GetCapacity(list) - 1) {
-        if (AllocateNewCapacity(list) == error)
+        if (UpwardReallocate(list) == error)
             return error;
     }
 
@@ -198,12 +198,20 @@ enum ReturnStatus DeleteElement(struct StructList* list,
     return success;
 }
 
-void UserPrintList(struct StructList* list)
+int UserPrintList(struct StructList* list)
 {
+    if (!ListVerifier) {
+        ListDump(list, __LINE__, __func__, __FILE__);
+        return error;
+    }
+
     for (int i = GetHead(list); i != 0; i = GetNextEl(list, i)) {
         printf("%d ", GetDataEl(list, i));
     }
     printf("\n");
+
+    return success;
+
 }
 
 void CloseLogFile()
@@ -228,13 +236,13 @@ enum ReturnStatus OpenLogFile()
     return success;
 }
 
-enum ReturnStatus AllocateNewCapacity(struct StructList* list)
+enum ReturnStatus UpwardReallocate(struct StructList* list)
 {
     assert(list != NULL);
 
     int* new_data = (int*)realloc(list->data, sizeof(int) * GetCapacity(list) * 2);
     int* new_next = (int*)realloc(list->next, sizeof(int) * GetCapacity(list) * 2);
-    int* new_prev = (int*)realloc(list->prev, sizeof(int) *  GetCapacity(list) * 2);
+    int* new_prev = (int*)realloc(list->prev, sizeof(int) * GetCapacity(list) * 2);
 
     if (new_data == NULL || new_next == NULL || new_prev == NULL) {
         free(new_data);
@@ -272,9 +280,112 @@ enum ReturnStatus AllocateNewCapacity(struct StructList* list)
 
     SetCapacity(list, 2 * GetCapacity(list));
 
-    ListDump(list, 1, "a", "a");
+    return success;
+}
+
+enum ReturnStatus DownwardReallocate(struct StructList* list)
+{
+    assert(list != NULL);
+
+    int counter = 0;
+
+    for (int i = GetCapacity(list) - 1; GetDataEl(list, i) == PZN; --i)
+        counter++;
+
+    //printf("CAPA: %d\n", GetCapacity(list) - 1);
+
+    if (counter == 0)
+        return error;
+
+    int index = 1;
+
+    SetCapacity(list, GetCapacity(list) - counter);
+
+    //printf("CAPA: %d\n", GetCapacity(list));
+
+    for (; GetNextEl(list, index) < GetCapacity(list); index++);
+
+    SetNextEl(list, index, 0);
+
+    int* new_data = (int*)realloc(list->data, sizeof(int) * GetCapacity(list));
+    int* new_next = (int*)realloc(list->next, sizeof(int) * GetCapacity(list));
+    int* new_prev = (int*)realloc(list->prev, sizeof(int) * GetCapacity(list));
+
+    if (new_data == NULL || new_next == NULL || new_prev == NULL) {
+
+        free(new_data);
+        free(new_next);
+        free(new_prev);
+
+        new_data = NULL;
+        new_next = NULL;
+        new_prev = NULL;
+
+        fprintf(log_file, "<h2> Memory did not allocate </h2>\n");
+
+        return error;
+    }
+
+    list->data = new_data;
+    list->next = new_next;
+    list->prev = new_prev;
 
     return success;
+}
+
+int SortList(struct StructList* list)
+{
+    assert(list != NULL);
+
+    if (!ListVerifier) {
+        ListDump(list, __LINE__, __func__, __FILE__);
+        return error;
+    }
+
+    int end_index = 0;
+    int next_el = 0;
+
+    for (int i = GetHead(list); i != 0; i = GetNextEl(list, i)) {
+        for (int j = GetHead(list); j != end_index; j = next_el) {
+
+            //printf("I: %d   J: %d \n", i, j);
+            next_el = GetNextEl(list, j);
+
+            if (   GetDataEl(list, GetNextEl(list, j)) != CANARY
+                && GetDataEl(list, j) > GetDataEl(list, GetNextEl(list, j)) ) {
+
+                next_el = j;
+
+                SwapNode(list, j, GetNextEl(list, j));
+
+                //ListDump(list, __LINE__, __func__, __FILE__);
+                //getchar();
+
+            }
+
+        }
+
+        end_index = GetPrevEl(list, end_index);
+    }
+
+    return success;
+}
+
+void SwapNode(struct StructList* list, int ind1, int ind2)
+{
+    assert(list != NULL);
+
+    int twin_next = GetNextEl(list, ind2);
+
+    SetPrevEl(list, GetNextEl(list, ind2), ind1);
+    SetNextEl(list, GetPrevEl(list, ind1), ind2);
+
+    SetNextEl(list, ind2, ind1);
+    SetPrevEl(list, ind2, GetPrevEl(list, ind1));
+
+    SetNextEl(list, ind1, twin_next);
+    SetPrevEl(list, ind1, ind2);
+
 }
 
 

@@ -15,7 +15,7 @@ static char* GetNewDotCmd(int file_counter)
             "dot -Tpng image%d.txt -o image%d.png",
              file_counter, file_counter);
 
-    return strdup(str_command);
+    return strdup(str_command);     // можно без strdup by VB
 }
 
 static char* GetNewImageFileName(int file_counter)
@@ -109,7 +109,8 @@ enum ReturnStatus ListVerifier(struct StructList* list)
 
     int count_el = 0;
 
-    for (int i = GetHead(list); i != 0; i = GetNextEl(list, i))
+    for (int i = GetHead(list); i != 0 && count_el <= GetNumOfEl(list) + 1;
+                                                    i = GetNextEl(list, i))
         count_el++;
 
     //printf("COUNTER: %d\n", count_el);
@@ -122,7 +123,8 @@ enum ReturnStatus ListVerifier(struct StructList* list)
 
     count_el = 0;
 
-    for (int i = GetTail(list); i != 0; i = GetPrevEl(list, i))
+    for (int i = GetTail(list); i != 0 && count_el <= GetNumOfEl(list) + 1;
+                                                    i = GetPrevEl(list, i))
         count_el++;
 
     if (GetNumOfEl(list) != count_el) {
@@ -280,7 +282,7 @@ void PrintDumpLog(struct StructList* list,
     assert(file != NULL);
     assert(message != NULL);
 
-    va_list args;
+    va_list args = {};
     va_start(args, message);
 
     vfprintf(log_file, message, args);
@@ -298,7 +300,7 @@ void PrintBazeNode(FILE* graphiz_file, const char* name, const char* color)
     assert(graphiz_file != NULL);
 
     fprintf(graphiz_file, "%s "
-                          "[shape = Mrecord; "
+                          "[shape = record; "
                           "style = filled; "
                           "fillcolor = \"%s\"; "
                           "color = \"#00000\"; "
@@ -313,7 +315,7 @@ void PrintNode(FILE* graphiz_file, int index, const char* color,
     assert(graphiz_file != NULL);
 
     fprintf(graphiz_file, "node%d "
-                          "[shape = Mrecord; "
+                          "[shape = record; "
                           "style = filled; "
                           "fillcolor = \"%s\"; "
                           "color = \"#00000\"; "
@@ -419,7 +421,7 @@ void CreateEdges(FILE* graphiz_file, struct StructList* list)
 
         if (IsIndexFree(list, i)) {
 
-            PrintEdge(graphiz_file, i, GetNextEl(list, i), "black", false);
+            PrintEdge(graphiz_file, i, GetNextEl(list, i), "black", true);
 
             continue;
 
@@ -512,7 +514,7 @@ void PrintErrorNode(FILE* graphiz_file,
     static int name = 0;
 
     fprintf(graphiz_file, "error%d "
-                          "[shape = Mrecord; "
+                          "[shape = record; "
                           "style = filled; "
                           "fillcolor = \"%s\"; "
                           "color = \"#00000\"; "
