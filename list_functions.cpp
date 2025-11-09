@@ -157,6 +157,48 @@ int InsertBefore(struct StructList* list,
     return ret_value;
 }
 
+int InsertBeforeHead(struct StructList* list,
+                     int value,
+                     const int line, const char* func, const char* file)
+{
+    assert(list != NULL);
+    assert(func != NULL);
+    assert(file != NULL);
+
+    LIST_VERIFIER(list);
+    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertBeforeHead(%d)</h3>\n",
+                                                           value);
+
+    int ret_value = Insert(list, GetPrevEl(list, GetHead(list)), value);
+
+    LIST_VERIFIER(list);
+    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertBeforeHead(%d)</h3>\n",
+                                                           value);
+
+    return ret_value;
+}
+
+int InsertAfterTail(struct StructList* list,
+                     int value,
+                     const int line, const char* func, const char* file)
+{
+    assert(list != NULL);
+    assert(func != NULL);
+    assert(file != NULL);
+
+    LIST_VERIFIER(list);
+    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertAfterTail(%d)</h3>\n",
+                                                           value);
+
+    int ret_value = Insert(list, GetTail(list), value);
+
+    LIST_VERIFIER(list);
+    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertAfterTail(%d)</h3>\n",
+                                                           value);
+
+    return ret_value;
+}
+
 enum ReturnStatus DeleteElement(struct StructList* list,
                                 int del_index,
                                 const int line, const char* func, const char* file)
@@ -180,7 +222,6 @@ enum ReturnStatus DeleteElement(struct StructList* list,
     SetDataEl(list, del_index, PZN);
 
     SetNextEl(list, GetPrevEl(list, del_index), GetNextEl(list, del_index));
-
     SetPrevEl(list, GetNextEl(list, del_index), GetPrevEl(list, del_index));
 
     SetPrevEl(list, del_index, -1);
@@ -209,6 +250,54 @@ int UserPrintList(struct StructList* list)
         printf("%d ", GetDataEl(list, i));
     }
     printf("\n");
+
+    return success;
+
+}
+
+enum ReturnStatus Linearization(struct StructList* list)
+{
+    assert(list);
+
+    fprintf(log_file,
+        "<\h3>Warning: After linearization you old index may be invalid<h3>\n");
+
+    int free_index = -1;
+    bool is_first_free = true;
+
+    for (int i = 1; i < GetCapacity(list); ++i) {
+
+        if (GetDataEl(list, i) == PZN && is_first_free) {
+            free_index = i;
+            is_first_free = false;
+        }
+
+        if (GetDataEl(list, i) != PZN && !is_first_free) {
+
+            SetDataEl(list, free_index, GetDataEl(list, i));
+            SetNextEl(list, free_index, GetNextEl(list, i));
+            SetPrevEl(list, free_index, GetPrevEl(list, i));
+
+            SetNextEl(list, GetPrevEl(list, i), free_index);
+            SetPrevEl(list, GetNextEl(list, i), free_index);
+
+            free_index++;
+        }
+    }
+
+    if (free_index == -1)
+        return success;
+
+    for (int i = GetNumOfEl(list) + 1; i < GetCapacity(list); ++i) {
+
+        SetDataEl(list, i, PZN);
+        SetNextEl(list, i, i + 1);
+        SetPrevEl(list, i, -1);
+    }
+
+    SetNextEl(list, GetCapacity(list) - 1, 0);
+
+    SetFree(list, 0);
 
     return success;
 
@@ -283,9 +372,12 @@ enum ReturnStatus UpwardReallocate(struct StructList* list)
     return success;
 }
 
-enum ReturnStatus DownwardReallocate(struct StructList* list)
+enum ReturnStatus DownwardReallocate(struct StructList* list, bool with_linearization)
 {
     assert(list != NULL);
+
+    if (with_linearization)
+        Linearization(list);
 
     int counter = 0;
 
@@ -303,9 +395,15 @@ enum ReturnStatus DownwardReallocate(struct StructList* list)
 
     //printf("CAPA: %d\n", GetCapacity(list));
 
-    for (; GetNextEl(list, index) < GetCapacity(list); index++);
+    //это для обновления фри
 
-    SetNextEl(list, index, 0);
+    if (!with_linearization) {
+
+        for (; GetNextEl(list, index) < GetCapacity(list); index++);
+
+        SetNextEl(list, index, 0);
+
+    }
 
     int* new_data = (int*)realloc(list->data, sizeof(int) * GetCapacity(list));
     int* new_next = (int*)realloc(list->next, sizeof(int) * GetCapacity(list));
@@ -333,7 +431,7 @@ enum ReturnStatus DownwardReallocate(struct StructList* list)
     return success;
 }
 
-int SortList(struct StructList* list)
+int SortListByNext(struct StructList* list)
 {
     assert(list != NULL);
 
@@ -352,9 +450,9 @@ int SortList(struct StructList* list)
             next_el = GetNextEl(list, j);
 
             if (   GetDataEl(list, GetNextEl(list, j)) != CANARY
-                && GetDataEl(list, j) > GetDataEl(list, GetNextEl(list, j)) ) {
+                && j > GetNextEl(list, j) ) {
 
-                next_el = j;
+                next_el = GetPrevEl(list, j);
 
                 SwapNode(list, j, GetNextEl(list, j));
 
@@ -362,9 +460,7 @@ int SortList(struct StructList* list)
                 //getchar();
 
             }
-
         }
-
         end_index = GetPrevEl(list, end_index);
     }
 
@@ -374,6 +470,10 @@ int SortList(struct StructList* list)
 void SwapNode(struct StructList* list, int ind1, int ind2)
 {
     assert(list != NULL);
+
+    int twin_data = GetDataEl(list, ind1);
+    SetDataEl(list, ind1, GetDataEl(list, ind2));
+    SetDataEl(list, ind2, twin_data);
 
     int twin_next = GetNextEl(list, ind2);
 
@@ -387,9 +487,3 @@ void SwapNode(struct StructList* list, int ind1, int ind2)
     SetPrevEl(list, ind1, ind2);
 
 }
-
-
-
-
-
-

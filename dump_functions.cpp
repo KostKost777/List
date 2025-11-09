@@ -300,7 +300,7 @@ void PrintBazeNode(FILE* graphiz_file, const char* name, const char* color)
     assert(graphiz_file != NULL);
 
     fprintf(graphiz_file, "%s "
-                          "[shape = record; "
+                          "[shape = Mrecord; "
                           "style = filled; "
                           "fillcolor = \"%s\"; "
                           "color = \"#00000\"; "
@@ -315,7 +315,7 @@ void PrintNode(FILE* graphiz_file, int index, const char* color,
     assert(graphiz_file != NULL);
 
     fprintf(graphiz_file, "node%d "
-                          "[shape = record; "
+                          "[shape = Mrecord; "
                           "style = filled; "
                           "fillcolor = \"%s\"; "
                           "color = \"#00000\"; "
@@ -436,11 +436,11 @@ void CreateEdges(FILE* graphiz_file, struct StructList* list)
         if (   IsPrevIndexCorrect(list, i)
             && IsNextIndexCorrect(list, i)) {
 
-            if (i != GetNextEl(list, GetPrevEl(list, i)))
+            if (IsPrevIndexCorrect(list, i) && i != GetNextEl(list, GetPrevEl(list, i)))
 
                 PrintEdge(graphiz_file, i, GetPrevEl(list, i), "black", true);
 
-            if (i != GetPrevEl(list, GetNextEl(list, i)))
+            if (IsNextIndexCorrect(list, i) && i != GetPrevEl(list, GetNextEl(list, i)))
 
                 PrintEdge(graphiz_file, i, GetNextEl(list, i), "black", true);
 
@@ -514,7 +514,7 @@ void PrintErrorNode(FILE* graphiz_file,
     static int name = 0;
 
     fprintf(graphiz_file, "error%d "
-                          "[shape = record; "
+                          "[shape = Mrecord; "
                           "style = filled; "
                           "fillcolor = \"%s\"; "
                           "color = \"#00000\"; "

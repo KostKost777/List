@@ -61,7 +61,6 @@ bool IsIndexFree(struct StructList* list, int index);
 
 #define LIST_VERIFIER(list)                             \
     if (ListVerifier(list) == error) {                  \
-        printf("Ошибка %d\n", GetErrCode(list));        \
         ListDump(list, line, func, file);               \
         return error;                                   \
     }                                                   \

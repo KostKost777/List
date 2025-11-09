@@ -16,40 +16,44 @@ int main()
     if (OpenLogFile())
         goto exit_label;
 
-    if (ListCtor(&list, 5))
+    if (ListCtor(&list, 11))
         goto exit_label;
 
-    INSERT_AFTER(&list, 0, 200, exit_label);
+    INSERT_AFTER(&list, 0, 100, exit_label);
 
-    INSERT_AFTER(&list, 1, 100, exit_label);
+    INSERT_AFTER(&list, 1, 200, exit_label);
 
-    INSERT_AFTER(&list, 2, 500, exit_label);
+    INSERT_AFTER(&list, 2, 300, exit_label);
 
-    INSERT_AFTER(&list, 3, 400, exit_label);
+    INSERT_AFTER(&list, 2, 250, exit_label);
 
-    INSERT_AFTER(&list, 2, 399, exit_label);
+    INSERT_AFTER(&list, 1, 150, exit_label);
 
-    INSERT_AFTER(&list, 0, 12, exit_label);
+    INSERT_AFTER(&list, 5, 400, exit_label);
 
-    INSERT_AFTER(&list, 5, 1, exit_label);
+    INSERT_AFTER(&list, 2, 160, exit_label);
 
-    INSERT_AFTER(&list, 4, 230, exit_label);
+    INSERT_BEFORE_HEAD(&list, 50, exit_label);
 
-    INSERT_AFTER(&list, 6, 888, exit_label);
-
-    INSERT_AFTER(&list, 7, 991, exit_label);
-
-    UserPrintList(&list);
-
-    DELETE_ELEMENT(&list, 3, exit_label);
     DELETE_ELEMENT(&list, 4, exit_label);
-    DELETE_ELEMENT(&list, 1, exit_label);
 
-    DownwardReallocate(&list);
-
-    //SortList(&list);
+    DELETE_ELEMENT(&list, 2, exit_label);
 
     UserPrintList(&list);
+
+    ListDump(&list, __LINE__, __func__, __FILE__);
+
+    DownwardReallocate(&list, false);
+
+    ListDump(&list, __LINE__, __func__, __FILE__);
+
+    UserPrintList(&list);
+
+    SortListByNext(&list);
+
+    UserPrintList(&list);
+
+    Linearization(&list);
 
     ListDump(&list, __LINE__, __func__, __FILE__);
 
