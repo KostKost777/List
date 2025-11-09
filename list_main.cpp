@@ -41,21 +41,33 @@ int main()
 
     UserPrintList(&list);
 
-    ListDump(&list, __LINE__, __func__, __FILE__);
-
-    DownwardReallocate(&list, false);
-
-    ListDump(&list, __LINE__, __func__, __FILE__);
-
-    UserPrintList(&list);
-
-    SortListByNext(&list);
-
-    UserPrintList(&list);
+    ListDump(&list, __LINE__, __func__, __FILE__,
+             "<h3>Before linearization</h3>\n");
 
     Linearization(&list);
 
-    ListDump(&list, __LINE__, __func__, __FILE__);
+    ListDump(&list, __LINE__, __func__, __FILE__,
+             "<h3>After linearization</h3>\n");
+
+    UserPrintList(&list);
+
+    ListDump(&list, __LINE__, __func__, __FILE__,
+             "<h3>Before sort list by next</h3>\n");
+
+    SortListByNext(&list);
+
+    ListDump(&list, __LINE__, __func__, __FILE__,
+             "<h3>After sort list by next</h3>\n");
+
+    UserPrintList(&list);
+
+    ListDump(&list, __LINE__, __func__, __FILE__,
+             "<h3>Before DownwardReallocate</h3>\n");
+
+    DownwardReallocate(&list, false);
+
+    ListDump(&list, __LINE__, __func__, __FILE__,
+             "<h3>After DownwardReallocate</h3>\n");
 
     exit_label:
 

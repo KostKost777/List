@@ -124,14 +124,19 @@ int InsertAfter(struct StructList* list,
     assert(func != NULL);
     assert(file != NULL);
 
+    #ifndef SPEED_TEST
     LIST_VERIFIER(list);
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertAfter(%d, %d)</h3>\n",
-                                                           index, value);
+    ListDump(list, line, func, file,
+             "\n<h3>\nDUMP: Before InsertAfter(%d, %d)</h3>\n", index, value);
+    #endif
+
     int ret_value = Insert(list, index, value);
 
+    #ifndef SPEED_TEST
     LIST_VERIFIER(list);
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertAfter(%d, %d)</h3>\n",
-                                                           index, value);
+    ListDump(list, line, func, file,
+             "\n<h3>\nDUMP: After InsertAfter(%d, %d)</h3>\n", index, value);
+    #endif
 
     return ret_value;
 }
@@ -144,15 +149,19 @@ int InsertBefore(struct StructList* list,
     assert(func != NULL);
     assert(file != NULL);
 
+    #ifndef SPEED_TEST
     LIST_VERIFIER(list);
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertBefore(%d, %d)</h3>\n",
-                                                           index, value);
+    ListDump(list, line, func, file,
+             "\n<h3>\nDUMP: Before InsertBefore(%d, %d)</h3>\n", index, value);
+    #endif
 
     int ret_value = Insert(list, GetPrevEl(list, index), value);
 
+    #ifndef SPEED_TEST
     LIST_VERIFIER(list);
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertBefore(%d, %d)</h3>\n",
-                                                           index, value);
+    ListDump(list, line, func, file,
+             "\n<h3>\nDUMP: After InsertBefore(%d, %d)</h3>\n", index, value);
+    #endif
 
     return ret_value;
 }
@@ -165,15 +174,19 @@ int InsertBeforeHead(struct StructList* list,
     assert(func != NULL);
     assert(file != NULL);
 
+    #ifndef SPEED_TEST
     LIST_VERIFIER(list);
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertBeforeHead(%d)</h3>\n",
-                                                           value);
+    ListDump(list, line, func, file,
+             "\n<h3>\nDUMP: Before InsertBeforeHead(%d)</h3>\n", value);
+    #endif
 
     int ret_value = Insert(list, GetPrevEl(list, GetHead(list)), value);
 
+    #ifndef SPEED_TEST
     LIST_VERIFIER(list);
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertBeforeHead(%d)</h3>\n",
-                                                           value);
+    ListDump(list, line, func, file,
+             "\n<h3>\nDUMP: After InsertBeforeHead(%d)</h3>\n", value);
+    #endif
 
     return ret_value;
 }
@@ -186,15 +199,19 @@ int InsertAfterTail(struct StructList* list,
     assert(func != NULL);
     assert(file != NULL);
 
+    #ifndef SPEED_TEST
     LIST_VERIFIER(list);
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before InsertAfterTail(%d)</h3>\n",
-                                                           value);
+    ListDump(list, line, func, file,
+             "\n<h3>\nDUMP: Before InsertAfterTail(%d)</h3>\n", value);
+    #endif
 
     int ret_value = Insert(list, GetTail(list), value);
 
+    #ifndef SPEED_TEST
     LIST_VERIFIER(list);
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After InsertAfterTail(%d)</h3>\n",
-                                                           value);
+    ListDump(list, line, func, file,
+             "\n<h3>\nDUMP: After InsertAFterTail(%d)</h3>\n", value);
+    #endif
 
     return ret_value;
 }
@@ -207,8 +224,11 @@ enum ReturnStatus DeleteElement(struct StructList* list,
     assert(func != NULL);
     assert(file != NULL);
 
+    #ifndef SPEED_TEST
     LIST_VERIFIER(list);
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: Before Delete(%d)</h3>\n", del_index);
+    ListDump(list, line, func, file,
+             "\n<h3>\nDUMP: Before Delete(%d)</h3>\n", del_index);
+    #endif
 
     if (   del_index < 0
         || GetPrevEl(list, del_index) == -1
@@ -232,9 +252,12 @@ enum ReturnStatus DeleteElement(struct StructList* list,
 
     SetNumOfEl(list, GetNumOfEl(list) - 1);
 
+    #ifndef SPEED_TEST
     LIST_VERIFIER(list);
 
-    PRINT_DUMP_LOG(list, "\n<h3>\nDUMP: After Delete(%d)</h3>\n", del_index);
+    ListDump(list, line, func, file,
+             "\n<h3>\nDUMP: After Delete(%d)</h3>\n", del_index);
+    #endif
 
     return success;
 }
@@ -242,7 +265,7 @@ enum ReturnStatus DeleteElement(struct StructList* list,
 int UserPrintList(struct StructList* list)
 {
     if (!ListVerifier) {
-        ListDump(list, __LINE__, __func__, __FILE__);
+        ListDump(list, __LINE__, __func__, __FILE__, "");
         return error;
     }
 
@@ -260,7 +283,7 @@ enum ReturnStatus Linearization(struct StructList* list)
     assert(list);
 
     fprintf(log_file,
-        "<\h3>Warning: After linearization you old index may be invalid<h3>\n");
+        "<h3>Warning: After linearization you old index may be invalid</h3>\n");
 
     int free_index = -1;
     bool is_first_free = true;
@@ -297,7 +320,10 @@ enum ReturnStatus Linearization(struct StructList* list)
 
     SetNextEl(list, GetCapacity(list) - 1, 0);
 
-    SetFree(list, 0);
+    if (GetNumOfEl(list) < GetCapacity(list) - 1)
+        SetFree(list, GetNumOfEl(list) + 1);
+    else
+        SetFree(list, 0);
 
     return success;
 
@@ -387,7 +413,7 @@ enum ReturnStatus DownwardReallocate(struct StructList* list, bool with_lineariz
     //printf("CAPA: %d\n", GetCapacity(list) - 1);
 
     if (counter == 0)
-        return error;
+        return success;
 
     int index = 1;
 
@@ -401,9 +427,16 @@ enum ReturnStatus DownwardReallocate(struct StructList* list, bool with_lineariz
 
         for (; GetNextEl(list, index) < GetCapacity(list); index++);
 
-        SetNextEl(list, index, 0);
+        if (index == GetCapacity(list))
+            SetFree(list, 0);
+
+        else
+            SetNextEl(list, index, 0);
 
     }
+    else
+        SetFree(list, 0);
+
 
     int* new_data = (int*)realloc(list->data, sizeof(int) * GetCapacity(list));
     int* new_next = (int*)realloc(list->next, sizeof(int) * GetCapacity(list));
@@ -436,7 +469,7 @@ int SortListByNext(struct StructList* list)
     assert(list != NULL);
 
     if (!ListVerifier) {
-        ListDump(list, __LINE__, __func__, __FILE__);
+        ListDump(list, __LINE__, __func__, __FILE__, "");
         return error;
     }
 

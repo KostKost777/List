@@ -20,17 +20,14 @@ enum ErrorCodes
 };
 
 enum ReturnStatus ListDump(struct StructList* list,
-                           const int LINE, const char* FUNC, const char* FILE);
+                           const int line, const char* func, const char* file,
+                           const char* message, ...);
 
 void PrintError(struct StructList* list);
 
 void FillLogFile(char* image_file_name, struct StructList* list, int file_counter);
 
 enum ReturnStatus ListVerifier(struct StructList* list);
-
-void PrintDumpLog(struct StructList* list,
-                  const int line, const char* func, const char* file,
-                  const char* message, ...);
 
 void CreateNodes(FILE* graphiz_file, struct StructList* list);
 
@@ -59,13 +56,10 @@ bool IsNextIndexCorrect(struct StructList* list, int index);
 
 bool IsIndexFree(struct StructList* list, int index);
 
-#define LIST_VERIFIER(list)                             \
-    if (ListVerifier(list) == error) {                  \
-        ListDump(list, line, func, file);               \
-        return error;                                   \
-    }                                                   \
-
-#define PRINT_DUMP_LOG(list, message, ...)                                \
-        PrintDumpLog(list, line, func, file, message, ##__VA_ARGS__);     \
+#define LIST_VERIFIER(list)                                     \
+    if (ListVerifier(list) == error) {                          \
+        ListDump(list, line, func, file, "Verifier work");      \
+        return error;                                           \
+    }                                                           \
 
 #endif

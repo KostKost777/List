@@ -175,11 +175,21 @@ void PrintError(struct StructList* list)
 }
 
 enum ReturnStatus ListDump(struct StructList* list,
-                           const int line, const char* func, const char* file)
+                           const int line, const char* func, const char* file,
+                           const char* message, ...)
 {
     assert(list != NULL);
     assert(func != NULL);
     assert(file != NULL);
+    assert(message != NULL);
+
+    va_list args = {};
+    va_start(args, message);
+
+    vfprintf(log_file, message, args);
+    fflush(log_file);
+
+    va_end(args);
 
     if (GetErrCode(list) & list_capacity_err)
         return error;
@@ -271,26 +281,6 @@ void FillLogFile(char* image_file_name, struct StructList* list, int file_counte
     fprintf(log_file, "-------------------------------------------------------\n\n");
 
     fflush(log_file);
-}
-
-void PrintDumpLog(struct StructList* list,
-                   const int line, const char* func, const char* file,
-                   const char* message, ...)
-{
-    assert(list != NULL);
-    assert(func != NULL);
-    assert(file != NULL);
-    assert(message != NULL);
-
-    va_list args = {};
-    va_start(args, message);
-
-    vfprintf(log_file, message, args);
-    fflush(log_file);
-
-    va_end(args);
-
-    ListDump(list, line, func, file);
 }
 
 void PrintBazeNode(FILE* graphiz_file, const char* name, const char* color)
